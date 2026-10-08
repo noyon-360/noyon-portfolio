@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
-/* Two-tone system: Flutter-blue for the client side, Nest-red for the server side, amber for delivery,
-   violet for hands-on craft (hardware, design, calligraphy). */
+/* Semantic accents: client (app side), server (backend), ops (delivery), craft (hands-on work).
+   Each theme below re-maps them; the hex values mirror src/lib/themes.ts — keep the two in sync.
+   Default is Midnight: the original Flutter-blue / Nest-red client ⇄ server pairing. */
 @theme {
   --color-ink: #07080c;
   --color-panel: #0e1118;
@@ -15,6 +16,67 @@
   --color-ops: #ffb547;
   --color-craft: #b48cff;
 }
+
+/* Terminal — phosphor green reads as "system OK", growth and trust in the shell. */
+:root[data-theme="terminal"] {
+  --color-ink: #050806;
+  --color-panel: #0a110c;
+  --color-panel-2: #101a13;
+  --color-line: rgb(200 255 220 / 0.1);
+  --color-line-strong: rgb(200 255 220 / 0.2);
+  --color-text: #d9f7e3;
+  --color-muted: #7a9984;
+  --color-client: #39ff88;
+  --color-server: #ff3b5c;
+  --color-ops: #ffcc00;
+  --color-craft: #00e5ff;
+}
+
+/* Red Team — crimson reads as urgency and power: the offensive-security look. */
+:root[data-theme="redteam"] {
+  --color-ink: #0a0506;
+  --color-panel: #13090b;
+  --color-panel-2: #1c0d10;
+  --color-line: rgb(255 214 220 / 0.1);
+  --color-line-strong: rgb(255 214 220 / 0.2);
+  --color-text: #f5e8ea;
+  --color-muted: #a08a8e;
+  --color-client: #ff2e4d;
+  --color-server: #ff8a00;
+  --color-ops: #ffd166;
+  --color-craft: #c77dff;
+}
+
+/* Blue Team — steel blue and teal read as calm, trustworthy defence. */
+:root[data-theme="blueteam"] {
+  --color-ink: #050a14;
+  --color-panel: #0a1220;
+  --color-panel-2: #0f1a2c;
+  --color-line: rgb(214 230 255 / 0.1);
+  --color-line-strong: rgb(214 230 255 / 0.2);
+  --color-text: #e6eefb;
+  --color-muted: #8798b3;
+  --color-client: #3da9ff;
+  --color-server: #00e0b8;
+  --color-ops: #ffb547;
+  --color-craft: #8b9cff;
+}
+
+/* Cyberpunk — neon cyan and magenta read as energy and creativity. */
+:root[data-theme="cyberpunk"] {
+  --color-ink: #0b0614;
+  --color-panel: #130b20;
+  --color-panel-2: #1b1030;
+  --color-line: rgb(236 220 255 / 0.1);
+  --color-line-strong: rgb(236 220 255 / 0.2);
+  --color-text: #f1eaff;
+  --color-muted: #9b8fb8;
+  --color-client: #00f0ff;
+  --color-server: #ff2bd6;
+  --color-ops: #f9f871;
+  --color-craft: #a66bff;
+}
+
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
@@ -34,10 +96,11 @@ body {
   background: var(--color-ink);
   color: var(--color-text);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 ::selection {
-  background: rgb(76 194 255 / 0.35);
+  background: color-mix(in srgb, var(--color-client) 35%, transparent);
 }
 
 :focus-visible {
@@ -52,10 +115,10 @@ body {
   pointer-events: none;
   user-select: none;
   padding: 3px 8px;
-  border: 1px solid rgb(233 237 243 / 0.18);
+  border: 1px solid var(--color-line-strong);
   border-radius: 4px;
-  background: rgb(7 8 12 / 0.75);
-  color: #e9edf3;
+  background: color-mix(in srgb, var(--color-ink) 75%, transparent);
+  color: var(--color-text);
   font-family: var(--font-geist-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -64,8 +127,8 @@ body {
 
 .grid-bg {
   background-image:
-    linear-gradient(to right, rgb(233 237 243 / 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(233 237 243 / 0.05) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in srgb, var(--color-text) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 5%, transparent) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(ellipse at 50% 40%, black 30%, transparent 75%);
 }
@@ -113,4 +176,29 @@ body {
     font-size: 9px;
     letter-spacing: 0.04em;
   }
+}
+
+/* Terminal extras: monospace section titles, a soft phosphor glow and faint CRT scanlines. */
+:root[data-theme="terminal"] h2.font-display {
+  font-family: var(--font-geist-mono), monospace;
+  letter-spacing: -0.04em;
+}
+
+:root[data-theme="terminal"] .text-client {
+  text-shadow: 0 0 18px color-mix(in srgb, var(--color-client) 45%, transparent);
+}
+
+:root[data-theme="terminal"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.14) 0 1px, transparent 1px 3px);
+}
+
+/* Neon glow for the accent words in Cyberpunk. */
+:root[data-theme="cyberpunk"] .text-client,
+:root[data-theme="cyberpunk"] .text-server {
+  text-shadow: 0 0 16px currentColor;
 }

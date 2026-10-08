@@ -4,10 +4,11 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Edges, Line, Stars } from "@react-three/drei";
 import { createContext, useContext, useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
-import { ACCENT_HEX } from "@/lib/accents";
+import { useTheme } from "@/lib/useTheme";
 
-const BG = "#07080c";
-const { client: BLUE, server: RED, ops: AMBER, craft: VIOLET } = ACCENT_HEX;
+// The live theme's accents, named for the roles they play in the scene.
+type ScenePalette = { BLUE: string; RED: string; AMBER: string; VIOLET: string };
+const Palette = createContext<ScenePalette>({ BLUE: "", RED: "", AMBER: "", VIOLET: "" });
 
 type Vec3 = [number, number, number];
 
@@ -123,6 +124,7 @@ function Rig({ stations, progressRef, cursorRef, reduced }: { stations: Vec3[]; 
 }
 
 function Path({ stations, reduced }: { stations: Vec3[]; reduced: boolean }) {
+  const { BLUE, RED, AMBER } = useContext(Palette);
   const curve = useMemo(
     () => new THREE.CatmullRomCurve3(stations.map(([x, y, z]) => new THREE.Vector3(x, y - 1.8, z))),
     [stations],
@@ -152,6 +154,7 @@ function Path({ stations, reduced }: { stations: Vec3[]; reduced: boolean }) {
 
 /* 01 — Flutter client: a phone whose widget tree explodes forward, inside a cloud of 35 apps. */
 function PhoneStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { BLUE } = useContext(Palette);
   const group = useRef<THREE.Group>(null);
   const cards = useRef<(THREE.Mesh | null)[]>([]);
   const cloud = useRef<THREE.InstancedMesh>(null);
@@ -224,6 +227,7 @@ function PhoneStation({ index, cursorRef, reduced, active }: StationProps) {
 
 /* 02 — Clean Architecture: three layers pull apart, with requests passing through each. */
 function ArchitectureStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { BLUE } = useContext(Palette);
   const group = useRef<THREE.Group>(null);
   const slabs = useRef<(THREE.Mesh | null)[]>([]);
   const packets = useRef<(THREE.Mesh | null)[]>([]);
@@ -290,6 +294,7 @@ const LANDMARKS: [number, number][] = [
 const FLIGHT_Y = 1.6;
 
 function GeoStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { BLUE } = useContext(Palette);
   const plane = useRef<THREE.Group>(null);
   const fences = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
   const rings = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
@@ -310,7 +315,7 @@ function GeoStation({ index, cursorRef, reduced, active }: StationProps) {
     [],
   );
   const flightPoints = useMemo(() => flight.getPoints(120), [flight]);
-  const v = useMemo(() => ({ p: new THREE.Vector3(), next: new THREE.Vector3(), base: new THREE.Color("#0a1d2b"), lit: new THREE.Color(BLUE) }), []);
+  const v = useMemo(() => ({ p: new THREE.Vector3(), next: new THREE.Vector3(), base: new THREE.Color("#0a1d2b"), lit: new THREE.Color(BLUE) }), [BLUE]);
 
   useFrame(({ clock }) => {
     const t = reduced ? 0.35 : clock.elapsedTime;
@@ -433,6 +438,7 @@ const QR_CELLS = (() => {
 })();
 
 function CoupleStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { BLUE, VIOLET } = useContext(Palette);
   const phones = useRef<(THREE.Group | null)[]>([]);
   const dots = useRef<(THREE.MeshBasicMaterial | null)[][]>([[], []]);
   const packets = useRef<(THREE.Mesh | null)[]>([]);
@@ -446,7 +452,7 @@ function CoupleStation({ index, cursorRef, reduced, active }: StationProps) {
       a: new THREE.Vector3(),
       b: new THREE.Vector3(),
     }),
-    [],
+    [BLUE],
   );
 
   useFrame(({ clock }) => {
@@ -563,6 +569,7 @@ const BUS_ROUTE: [number, number][] = [
 ];
 
 function TransitStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { BLUE, RED } = useContext(Palette);
   const bus = useRef<THREE.Group>(null);
   const pings = useRef<(THREE.Mesh | null)[]>([]);
   const packets = useRef<(THREE.Mesh | null)[]>([]);
@@ -706,6 +713,7 @@ function TransitStation({ index, cursorRef, reduced, active }: StationProps) {
 const POSTERS = ["#ff4d6d", "#4cc2ff", "#ffb547", "#b48cff", "#3ddc97", "#ff8a3d", "#e9edf3", "#4cc2ff"];
 
 function TvStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { RED } = useContext(Palette);
   const carousel = useRef<THREE.Group>(null);
   const bar = useRef<THREE.Mesh>(null);
   const reels = useRef<(THREE.Mesh | null)[]>([]);
@@ -815,6 +823,7 @@ const ORBITS = [
 ];
 
 function CosmoStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { BLUE, AMBER, VIOLET } = useContext(Palette);
   const planets = useRef<(THREE.Mesh | null)[]>([]);
   const band = useRef<THREE.MeshBasicMaterial>(null);
   const halo = useRef<THREE.Mesh>(null);
@@ -919,6 +928,7 @@ function CosmoStation({ index, cursorRef, reduced, active }: StationProps) {
 
 /* 08 — NestJS backend: 25 modules under a rotating auth guard. */
 function BackendStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { RED } = useContext(Palette);
   const group = useRef<THREE.Group>(null);
   const ring = useRef<THREE.Mesh>(null);
   const cubes = useRef<(THREE.Mesh | null)[]>([]);
@@ -993,6 +1003,7 @@ const SEC_PACKETS = 16;
 const GREEN = "#3ddc97";
 
 function SecurityStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { RED } = useContext(Palette);
   const packets = useRef<(THREE.Mesh | null)[]>([]);
   const columns = useRef<(THREE.Mesh | null)[]>([]);
   const alarm = useRef<THREE.Mesh>(null);
@@ -1019,7 +1030,7 @@ function SecurityStation({ index, cursorRef, reduced, active }: StationProps) {
       benign: new THREE.Vector3(2.7, 0.75, 0),
       attack: new THREE.Vector3(2.7, -0.75, 0),
     }),
-    [],
+    [RED],
   );
 
   useFrame(({ clock }) => {
@@ -1108,6 +1119,7 @@ function SecurityStation({ index, cursorRef, reduced, active }: StationProps) {
 
 /* 10 — Media pipeline: upload → queue → ffmpeg → four HLS renditions. */
 function StreamingStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { RED } = useContext(Palette);
   const jobs = useRef<(THREE.Mesh | null)[]>([]);
   const core = useRef<THREE.Mesh>(null);
   const bars = useRef<(THREE.Mesh | null)[]>([]);
@@ -1167,6 +1179,7 @@ function StreamingStation({ index, cursorRef, reduced, active }: StationProps) {
 
 /* 11 — Release: a build travels through CI gates to the stores. */
 function ReleaseStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { AMBER } = useContext(Palette);
   const capsule = useRef<THREE.Mesh>(null);
   const gates = useRef<(THREE.MeshStandardMaterial | null)[]>([]);
   const gateX = [-1.5, 0, 1.5];
@@ -1254,6 +1267,7 @@ const WIRES: { from: [number, number, number]; to: [number, number, number]; col
 ];
 
 function HardwareStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { BLUE, VIOLET } = useContext(Palette);
   const body = useRef<THREE.Group>(null);
   const parts = useRef<(THREE.Mesh | null)[]>([]);
   const wires = useRef<THREE.Group>(null);
@@ -1442,6 +1456,7 @@ function goldenGrid(height: number) {
 }
 
 function DesignStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { VIOLET } = useContext(Palette);
   const H = 2.3;
   const W = H * PHI;
   const group = useRef<THREE.Group>(null);
@@ -1507,6 +1522,7 @@ function DesignStation({ index, cursorRef, reduced, active }: StationProps) {
 const FIREBASE_SERVICES = ["Auth", "Firestore", "FCM", "Functions", "Crashlytics", "Analytics"];
 
 function FirebaseStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { BLUE, AMBER } = useContext(Palette);
   const flame = useRef<THREE.Group>(null);
   const nodes = useRef<(THREE.Group | null)[]>([]);
   const pulses = useRef<(THREE.Mesh | null)[]>([]);
@@ -1589,6 +1605,7 @@ function FirebaseStation({ index, cursorRef, reduced, active }: StationProps) {
 
 /* 14 — Leadership: a lead node with 14 engineers in orbit. */
 function TeamStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { AMBER } = useContext(Palette);
   const lead = useRef<THREE.Mesh>(null);
   const nodes = useRef<(THREE.Mesh | null)[]>([]);
   const lines = useRef<THREE.LineSegments>(null);
@@ -1669,33 +1686,40 @@ export default function JourneyScene({
   const cursorRef = useRef(0);
   const layerRef = useRef<HTMLDivElement>(null);
   const stations = useMemo(() => stationPositions(ids.length), [ids.length]);
+  const theme = useTheme();
+  const { client: BLUE, server: RED, ops: AMBER, craft: VIOLET } = theme.accents;
+  const palette = useMemo(() => ({ BLUE, RED, AMBER, VIOLET }), [BLUE, RED, AMBER, VIOLET]);
 
   return (
     <div className="relative h-full w-full">
       <LabelLayer value={layerRef}>
-        <Canvas
-          frameloop={running ? "always" : "never"}
-          dpr={[1, 1.75]}
-          camera={{ fov: 42, near: 0.1, far: 120, position: [-3.1, 0.8, 10.5] }}
-          gl={{ antialias: true, powerPreference: "high-performance" }}
-        >
-          <color attach="background" args={[BG]} />
-          <fog attach="fog" args={[BG, 12, 24]} />
-          <ambientLight intensity={0.35} />
-          <hemisphereLight args={["#9fd8ff", "#1a0b10", 0.5]} />
-          <directionalLight position={[5, 8, 6]} intensity={1.3} />
-          <Stars radius={80} depth={40} count={1400} factor={3} fade speed={reduced ? 0 : 0.4} />
-          <Rig stations={stations} progressRef={progressRef} cursorRef={cursorRef} reduced={reduced} />
-          <Path stations={stations} reduced={reduced} />
-          {ids.map((id, i) => {
-            const Station = STATION_REGISTRY[id];
-            return Station ? (
-              <group key={id} position={stations[i]}>
-                <Station index={i} cursorRef={cursorRef} reduced={reduced} active={active === i} />
-              </group>
-            ) : null;
-          })}
-        </Canvas>
+        <Palette value={palette}>
+          {/* Keyed by theme: materials build their colours once, so a theme switch remounts the scene. */}
+          <Canvas
+            key={theme.id}
+            frameloop={running ? "always" : "never"}
+            dpr={[1, 1.75]}
+            camera={{ fov: 42, near: 0.1, far: 120, position: [-3.1, 0.8, 10.5] }}
+            gl={{ antialias: true, powerPreference: "high-performance" }}
+          >
+            <color attach="background" args={[theme.ink]} />
+            <fog attach="fog" args={[theme.ink, 12, 24]} />
+            <ambientLight intensity={0.35} />
+            <hemisphereLight args={["#9fd8ff", "#1a0b10", 0.5]} />
+            <directionalLight position={[5, 8, 6]} intensity={1.3} />
+            <Stars radius={80} depth={40} count={1400} factor={3} fade speed={reduced ? 0 : 0.4} />
+            <Rig stations={stations} progressRef={progressRef} cursorRef={cursorRef} reduced={reduced} />
+            <Path stations={stations} reduced={reduced} />
+            {ids.map((id, i) => {
+              const Station = STATION_REGISTRY[id];
+              return Station ? (
+                <group key={id} position={stations[i]}>
+                  <Station index={i} cursorRef={cursorRef} reduced={reduced} active={active === i} />
+                </group>
+              ) : null;
+            })}
+          </Canvas>
+        </Palette>
       </LabelLayer>
       <div ref={layerRef} className="pointer-events-none absolute inset-0 overflow-hidden" />
     </div>

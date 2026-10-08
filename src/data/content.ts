@@ -13,6 +13,8 @@ export const profile = {
     "Senior software engineer with 35+ cross-platform apps shipped to Google Play and the App Store, working full-stack across the Flutter client and NestJS/Firebase backends. Comfortable owning a feature from architecture to release — Clean Architecture, state management, media streaming, payments, and CI/CD.",
   // Drop the PDF into /public with this name to enable the download button.
   cv: "/Nazibullah_Noyon_CV.pdf",
+  // Square headshot shown beside the name in the navbar; initials show until the file exists.
+  photo: "/avatar.jpg",
   socials: [{ label: "GitHub", href: "https://github.com/noyon-360" }],
 };
 

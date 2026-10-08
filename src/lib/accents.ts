@@ -1,9 +1,4 @@
-import type { Accent } from "@/data/content";
+import { DEFAULT_THEME, themeById } from "./themes";
 
-// Hex values mirror --color-client / --color-server / --color-ops / --color-craft in globals.css.
-export const ACCENT_HEX: Record<Accent, string> = {
-  client: "#4cc2ff",
-  server: "#ff4d6d",
-  ops: "#ffb547",
-  craft: "#b48cff",
-};
+// Accents of the default theme. Components that should follow the live theme use useTheme() instead.
+export const ACCENT_HEX = themeById(DEFAULT_THEME).accents;
