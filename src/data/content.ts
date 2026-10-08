@@ -3,8 +3,8 @@ import type { CraftArtId } from "@/components/CraftArt";
 export const profile = {
   name: "Nazibullah Noyon",
   shortName: "Noyon",
-  title: "Senior Software Engineer",
-  roles: ["Full-Stack (Flutter + NestJS)", "Team Lead"],
+  title: "Software Engineer",
+  roles: ["Mobile, Web & Backend"],
   location: "Gazipur, Bangladesh",
   timezone: "UTC +06:00",
   // IANA zone for the live clock in the hero.
@@ -12,7 +12,7 @@ export const profile = {
   email: "nazibullahnoyon19.20@gmail.com",
   phone: "+8801305223046",
   summary:
-    "Senior software engineer with 35+ cross-platform apps shipped to Google Play and the App Store, working full-stack across the Flutter client and NestJS/Firebase backends. Comfortable owning a feature from architecture to release — Clean Architecture, state management, media streaming, payments, and CI/CD.",
+    "Software engineer with 35+ cross-platform apps shipped to Google Play and the App Store, working full-stack across the Flutter client and NestJS/Firebase backends. Comfortable owning a feature from architecture to release — Clean Architecture, state management, media streaming, payments, and CI/CD.",
   // Drop the PDF into /public with this name to enable the download button.
   cv: "/Nazibullah_Noyon_CV.pdf",
   // Square headshot shown beside the name in the navbar; initials show until the file exists.
@@ -24,7 +24,7 @@ export const profile = {
 // toolkit as tags. `accents` fill in a colour instead of the text colour.
 export const intro = {
   lines: [
-    "Senior software engineer with 35+ cross-platform apps shipped to Google Play and the App Store.",
+    "Software engineer with 35+ cross-platform apps shipped to Google Play and the App Store.",
     "Full-stack across the Flutter client and the NestJS/Firebase backend behind it.",
     "I own features end to end, from architecture to release.",
   ],
@@ -500,13 +500,15 @@ export const skills = [
 // A step is either a redrawn illustration (`art`, see CraftArt.tsx) or a cleaned-up image.
 export type CraftStep = { caption: string } & ({ art: CraftArtId } | { src: string; w: number; h: number });
 
-type CraftTrack = {
+export type CraftTrack = {
   id: string;
   label: string;
   title: string;
   summary: string;
   tools: string[];
   steps: CraftStep[];
+  // Lay steps out two per row instead of one, for tracks with many small pieces.
+  columns?: 1 | 2;
   compare?: {
     base: { src: string; w: number; h: number };
     overlay: { src: string; w: number; h: number };
@@ -551,6 +553,7 @@ export const craft: CraftTrack[] = [
     summary:
       "Posters, editorial illustration, logos and print — built in Photoshop and Illustrator, composed on a grid before a single colour goes down.",
     tools: ["Photoshop", "Illustrator", "InDesign", "XD"],
+    columns: 2,
     compare: {
       base: { src: "/craft/design-space-poster.jpg", w: 595, h: 842 },
       overlay: { src: "/craft/design-space-poster-grid.jpg", w: 595, h: 842 },

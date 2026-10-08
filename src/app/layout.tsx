@@ -20,9 +20,9 @@ const display = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Nazibullah Noyon — Senior Software Engineer (Flutter + NestJS)",
+  title: "Nazibullah Noyon — Software Engineer (Mobile, Web & Backend)",
   description:
-    "Senior software engineer and team lead. 35+ Flutter apps shipped to Google Play and the App Store, with NestJS and Firebase backends behind them.",
+    "Software engineer and team lead. 35+ Flutter apps shipped to Google Play and the App Store, with NestJS and Firebase backends behind them.",
 };
 
 export const viewport: Viewport = {

@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
-import { craft, type CraftStep } from "@/data/content";
+import { useEffect, useRef, useState } from "react";
+import { craft, type CraftStep, type CraftTrack } from "@/data/content";
 import { CRAFT_ART } from "./CraftArt";
 import { Section, Tag } from "./Section";
 
@@ -18,13 +18,160 @@ function StepVisual({ step, sizes, className }: { step: CraftStep; sizes: string
   return <Image src={step.src} alt={step.caption} width={step.w} height={step.h} sizes={sizes} className={className} />;
 }
 
-export default function Craft() {
-  const [tab, setTab] = useState(0);
+// One chapter of the build log: its story and step index stay pinned on the left while its steps
+// scroll by on the right, then hand off to the next chapter. The step crossing the middle of the
+// screen lights up in the index.
+function Chapter({
+  track,
+  number,
+  total,
+  onView,
+}: {
+  track: CraftTrack;
+  number: number;
+  total: number;
+  onView: (step: CraftStep) => void;
+}) {
+  const [active, setActive] = useState(0);
   const [showGrid, setShowGrid] = useState(true);
+  const stepRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const compare = track.compare;
+
+  useEffect(() => {
+    const steps = stepRefs.current.filter((el) => el !== null);
+    const focus = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActive(Number((e.target as HTMLElement).dataset.index));
+      },
+      { rootMargin: "-45% 0px -45% 0px" },
+    );
+    // Steps rise in once, the first time they enter the screen.
+    const reveal = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          (e.target as HTMLElement).dataset.seen = "";
+          reveal.unobserve(e.target);
+        }
+      },
+      { threshold: 0.15 },
+    );
+    steps.forEach((el) => {
+      focus.observe(el);
+      reveal.observe(el);
+    });
+    return () => {
+      focus.disconnect();
+      reveal.disconnect();
+    };
+  }, []);
+
+  function jump(i: number) {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    stepRefs.current[i]?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+  }
+
+  return (
+    <article aria-labelledby={`craft-${track.id}`} className="grid gap-10 lg:grid-cols-3 lg:gap-12">
+      <div className="lg:sticky lg:top-24 lg:max-h-[calc(100svh-7rem)] lg:self-start lg:overflow-y-auto">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-craft">
+          {String(number).padStart(2, "0")} / {String(total).padStart(2, "0")} · {track.label}
+        </p>
+        <h3 id={`craft-${track.id}`} className="mt-3 font-display text-3xl font-semibold">
+          {track.title}
+        </h3>
+        <p className="mt-3 text-muted">{track.summary}</p>
+        <div className="mt-5 flex flex-wrap gap-1.5">{track.tools.map((t) => <Tag key={t}>{t}</Tag>)}</div>
+
+        <ol aria-label={`${track.label} steps`} className="mt-8 hidden border-l border-line lg:block">
+          {track.steps.map((s, i) => (
+            <li key={s.caption}>
+              <button
+                onClick={() => jump(i)}
+                aria-current={i === active ? "step" : undefined}
+                className={`-ml-px flex w-full gap-3 border-l-2 py-1.5 pl-4 text-left text-sm transition-colors ${
+                  i === active ? "border-craft text-text" : "border-transparent text-muted hover:text-text"
+                }`}
+              >
+                <span className={`font-mono ${i === active ? "text-craft" : ""}`}>{String(i + 1).padStart(2, "0")}</span>
+                {s.caption}
+              </button>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="lg:col-span-2">
+        {compare && (
+          <figure className="mb-10 flex flex-col gap-4 rounded-2xl border border-line bg-panel p-4 sm:flex-row sm:items-center">
+            <button
+              onClick={() => onView({ ...(showGrid ? compare.overlay : compare.base), caption: compare.caption })}
+              className="relative mx-auto block w-48 shrink-0 overflow-hidden rounded-lg sm:mx-0"
+              aria-label="View poster full size"
+            >
+              <Image src={compare.base.src} alt="“Innovation” space poster" width={compare.base.w} height={compare.base.h} sizes="192px" className="h-auto w-full" />
+              <Image
+                src={compare.overlay.src}
+                alt=""
+                width={compare.overlay.w}
+                height={compare.overlay.h}
+                sizes="192px"
+                className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${showGrid ? "opacity-100" : "opacity-0"}`}
+              />
+            </button>
+            <figcaption>
+              <p className="text-sm text-muted">{compare.caption}</p>
+              <button
+                onClick={() => setShowGrid(!showGrid)}
+                aria-pressed={showGrid}
+                className="mt-4 rounded-full border border-line-strong px-4 py-1.5 font-mono text-xs uppercase tracking-widest hover:bg-panel-2"
+              >
+                {showGrid ? "Hide grid" : "Show grid"} · φ
+              </button>
+            </figcaption>
+          </figure>
+        )}
+
+        <ol className={`grid items-start gap-x-6 gap-y-10 ${track.columns === 2 ? "sm:grid-cols-2" : ""}`}>
+          {track.steps.map((s, i) => (
+            <li
+              key={s.caption}
+              ref={(el) => {
+                stepRefs.current[i] = el;
+              }}
+              data-index={i}
+              className="translate-y-6 opacity-0 transition duration-700 ease-out data-seen:translate-y-0 data-seen:opacity-100"
+            >
+              <figure>
+                <button
+                  onClick={() => onView(s)}
+                  className="group flex w-full justify-center overflow-hidden rounded-xl border border-line bg-panel"
+                  aria-label={`View full size: ${s.caption}`}
+                >
+                  <StepVisual
+                    step={s}
+                    sizes={track.columns === 2 ? "(max-width: 640px) 92vw, 380px" : "(max-width: 1024px) 92vw, 760px"}
+                    className={`transition-transform duration-500 group-hover:scale-[1.03] ${
+                      "art" in s ? "w-full" : "h-auto max-h-[75svh] w-full object-contain"
+                    }`}
+                  />
+                </button>
+                <figcaption className="mt-3 flex gap-3 text-sm">
+                  <span className="font-mono text-craft">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="text-muted">{s.caption}</span>
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </article>
+  );
+}
+
+export default function Craft() {
   const [open, setOpen] = useState<CraftStep | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const track = craft[tab];
-  const compare = track.compare;
 
   function view(step: CraftStep) {
     setOpen(step);
@@ -39,89 +186,10 @@ export default function Craft() {
       title="Same method, different materials."
       intro="I plan on a grid, then build — whether it's an app, a robot chassis, a poster or a line of calligraphy."
     >
-      <div role="tablist" aria-label="Craft" className="flex flex-wrap gap-2">
-        {craft.map((c, i) => (
-          <button
-            key={c.id}
-            role="tab"
-            id={`craft-tab-${c.id}`}
-            aria-selected={i === tab}
-            aria-controls="craft-panel"
-            onClick={() => setTab(i)}
-            className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
-              i === tab ? "border-craft bg-craft/15 text-text" : "border-line text-muted hover:text-text"
-            }`}
-          >
-            {c.label}
-          </button>
+      <div className="flex flex-col gap-24 lg:gap-32">
+        {craft.map((t, i) => (
+          <Chapter key={t.id} track={t} number={i + 1} total={craft.length} onView={view} />
         ))}
-      </div>
-
-      <div id="craft-panel" role="tabpanel" aria-labelledby={`craft-tab-${track.id}`} className="mt-8">
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-1">
-            <h3 className="font-display text-3xl font-semibold">{track.title}</h3>
-            <p className="mt-3 text-muted">{track.summary}</p>
-            <div className="mt-5 flex flex-wrap gap-1.5">{track.tools.map((t) => <Tag key={t}>{t}</Tag>)}</div>
-          </div>
-
-          {compare && (
-            <figure className="lg:col-span-2">
-              <div className="flex flex-col gap-4 rounded-2xl border border-line bg-panel p-4 sm:flex-row sm:items-center">
-                <button
-                  onClick={() => view({ ...(showGrid ? compare.overlay : compare.base), caption: compare.caption })}
-                  className="relative mx-auto block w-48 shrink-0 overflow-hidden rounded-lg sm:mx-0"
-                  aria-label="View poster full size"
-                >
-                  <Image src={compare.base.src} alt="“Innovation” space poster" width={compare.base.w} height={compare.base.h} sizes="192px" className="h-auto w-full" />
-                  <Image
-                    src={compare.overlay.src}
-                    alt=""
-                    width={compare.overlay.w}
-                    height={compare.overlay.h}
-                    sizes="192px"
-                    className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${showGrid ? "opacity-100" : "opacity-0"}`}
-                  />
-                </button>
-                <figcaption>
-                  <p className="text-sm text-muted">{compare.caption}</p>
-                  <button
-                    onClick={() => setShowGrid(!showGrid)}
-                    aria-pressed={showGrid}
-                    className="mt-4 rounded-full border border-line-strong px-4 py-1.5 font-mono text-xs uppercase tracking-widest hover:bg-panel-2"
-                  >
-                    {showGrid ? "Hide grid" : "Show grid"} · φ
-                  </button>
-                </figcaption>
-              </div>
-            </figure>
-          )}
-        </div>
-
-        {/* Keyed per track so switching tabs starts the strip from the first step. */}
-        <ol key={track.id} className="mt-8 flex snap-x gap-4 overflow-x-auto pb-4 [scrollbar-width:thin]">
-          {track.steps.map((s, i) => (
-            <li key={s.caption} className="shrink-0 snap-start">
-              <figure>
-                <button
-                  onClick={() => view(s)}
-                  className="group block h-64 overflow-hidden rounded-xl border border-line bg-panel sm:h-80"
-                  aria-label={`View full size: ${s.caption}`}
-                >
-                  <StepVisual
-                    step={s}
-                    sizes="(max-width: 640px) 70vw, 480px"
-                    className="h-full w-auto transition-transform duration-500 group-hover:scale-[1.03]"
-                  />
-                </button>
-                <figcaption className="mt-3 flex gap-3 text-sm">
-                  <span className="font-mono text-craft">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="text-muted">{s.caption}</span>
-                </figcaption>
-              </figure>
-            </li>
-          ))}
-        </ol>
       </div>
 
       <dialog
