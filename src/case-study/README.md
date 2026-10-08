@@ -11,6 +11,9 @@
 
 That's it: the list page, the card and the static export pick it up on the next build.
 
+With Claude Code, run `/new-case-study` (see `.claude/skills/new-case-study/SKILL.md`) to follow the full checklist:
+file layout, scene anatomy, content and sourcing rules, and verification.
+
 It also appears on the portfolio home page (`src/components/CaseStudies.tsx`, the first three entries) with a
 "See more case studies" link to `/case-study`.
 
