@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Edges, Line, Stars } from "@react-three/drei";
+import { Edges, Line, RoundedBox, Stars } from "@react-three/drei";
 import { createContext, useContext, useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { useTheme } from "@/lib/useTheme";
@@ -152,11 +152,57 @@ function Path({ stations, reduced }: { stations: Vec3[]; reduced: boolean }) {
   );
 }
 
-/* 01 — Flutter client: a phone whose widget tree explodes forward, inside a cloud of 35 apps. */
+// Flat rounded rectangle, the building block of the phone's on-screen UI.
+function roundRect(w: number, h: number, r: number) {
+  const s = new THREE.Shape();
+  const x = -w / 2;
+  const y = -h / 2;
+  r = Math.min(r, w / 2, h / 2);
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y);
+  s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r);
+  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h);
+  s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r);
+  s.quadraticCurveTo(x, y, x + r, y);
+  return new THREE.ShapeGeometry(s, 6);
+}
+
+function UiRect({ w, h, r = 0.05, color, opacity = 1, position }: { w: number; h: number; r?: number; color: string; opacity?: number; position?: Vec3 }) {
+  const geo = useMemo(() => roundRect(w, h, r), [w, h, r]);
+  useEffect(() => () => geo.dispose(), [geo]);
+  return (
+    <mesh geometry={geo} position={position}>
+      <meshBasicMaterial color={color} transparent={opacity < 1} opacity={opacity} />
+    </mesh>
+  );
+}
+
+// Eased step index: holds on a value for `period` seconds, then glides to the next.
+const stepped = (t: number, period: number) => Math.floor(t / period) + THREE.MathUtils.smoothstep(t % period, period * 0.7, period);
+// Ping-pongs a stepped value across n slots: 0, 1, …, n-1, …, 1, 0.
+const pingPong = (v: number, n: number) => n - 1 - Math.abs((v % (2 * n - 2)) - (n - 1));
+
+const INK = "#e6edf5";
+const LIST_TOP = 0.14;
+const LIST_BOTTOM = -1.16;
+
+/* 01 — Flutter client: a live app UI on a phone. Widgets fly in and assemble as the station
+   comes into focus, then keep running — feed scrolls, tabs switch, the FAB ripples — and every
+   few seconds a "hot reload" pulls the layers apart to show the widget tree. */
 function PhoneStation({ index, cursorRef, reduced, active }: StationProps) {
   const { BLUE } = useContext(Palette);
   const group = useRef<THREE.Group>(null);
-  const cards = useRef<(THREE.Mesh | null)[]>([]);
+  const layers = useRef<(THREE.Group | null)[]>([]);
+  const tiles = useRef<(THREE.Group | null)[]>([]);
+  const progress = useRef<THREE.Group>(null);
+  const knob = useRef<THREE.Group>(null);
+  const chip = useRef<THREE.Group>(null);
+  const tab = useRef<THREE.Group>(null);
+  const fab = useRef<THREE.Group>(null);
+  const ripple = useRef<THREE.Mesh>(null);
   const cloud = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const apps = useMemo(() => {
@@ -168,25 +214,68 @@ function PhoneStation({ index, cursorRef, reduced, active }: StationProps) {
       return new THREE.Vector3(Math.cos(a) * r, y * 0.8, Math.sin(a) * r).multiplyScalar(2.9);
     });
   }, []);
-  const widgets = [
-    { w: 1.3, h: 0.42, x: 0, y: 1.1 },
-    { w: 1.3, h: 0.95, x: 0, y: 0.3 },
-    { w: 0.6, h: 0.6, x: -0.35, y: -0.6 },
-    { w: 0.6, h: 0.6, x: 0.35, y: -0.6 },
-    { w: 1.3, h: 0.32, x: 0, y: -1.25 },
+  // Where each layer flies in from: out of the app cloud around the phone.
+  const from: Vec3[] = [
+    [-1.6, 1.4, 1.2],
+    [1.8, 0.8, 1.4],
+    [-1.9, 0.1, 1.0],
+    [1.7, -0.6, 1.6],
+    [-1.5, -1.4, 1.2],
+    [1.4, -1.6, 1.8],
   ];
 
   useFrame(({ clock }) => {
     const t = reduced ? 0 : clock.elapsedTime;
     const f = focusOf(cursorRef.current, index);
     if (group.current) group.current.rotation.y = -0.4 + Math.sin(t * 0.4) * 0.12;
-    cards.current.forEach((m, k) => {
-      if (m) m.position.z = 0.11 + f * (0.22 + k * 0.14);
+
+    // Hot reload: a quick swell every 6s that spreads the widget layers apart.
+    const reload = reduced ? 0 : Math.pow(Math.max(0, Math.sin(((t % 6) / 6) * Math.PI * 2 - Math.PI / 2)), 6);
+    const spread = 0.012 + f * (0.05 + 0.16 * reload);
+    layers.current.forEach((g, k) => {
+      if (!g) return;
+      const e = THREE.MathUtils.smoothstep(f * 1.7 - k * 0.12, 0, 1);
+      const [fx, fy, fz] = from[k];
+      g.position.set(fx * (1 - e), fy * (1 - e), 0.095 + k * spread + fz * (1 - e));
+      g.scale.setScalar(0.001 + e);
     });
+
+    // ListView: scrolls one tile at a time, tiles squash in and out at the viewport edges.
+    const scroll = stepped(t, 1.6) * 0.4;
+    tiles.current.forEach((g, k) => {
+      if (!g) return;
+      const d = (((k * 0.4 - scroll) % 2) + 2) % 2;
+      const y = LIST_TOP + 0.17 - d;
+      const edge = clamp01(Math.min(LIST_TOP - y, y - LIST_BOTTOM) / 0.17);
+      g.position.y = y;
+      g.scale.set(0.9 + 0.1 * edge, Math.max(0.001, edge), 1);
+    });
+
+    // Hero card progress bar and a toggle switch.
+    const p = reduced ? 0.65 : (t * 0.25) % 1.2;
+    if (progress.current) {
+      const w = clamp01(p);
+      progress.current.scale.x = Math.max(0.001, w);
+      progress.current.position.x = -0.55 + 0.55 * w;
+    }
+    if (knob.current) knob.current.position.x = 0.44 + 0.1 * pingPong(stepped(t, 2), 2);
+
+    // Chip selection and bottom-nav tab glide between positions.
+    if (chip.current) chip.current.position.x = -0.46 + 0.46 * pingPong(stepped(t, 2.4), 3);
+    if (tab.current) tab.current.position.x = -0.54 + 0.36 * pingPong(stepped(t + 1, 2.2), 4);
+
+    // FAB: a tap every 2.4s — it dips, and a ripple spreads out.
+    const tap = (t % 2.4) / 2.4;
+    if (fab.current) fab.current.scale.setScalar(1 - 0.12 * Math.exp(-tap * 12) * (reduced ? 0 : 1));
+    if (ripple.current) {
+      ripple.current.scale.setScalar(reduced ? 0.001 : 1 + tap * 2.2);
+      (ripple.current.material as THREE.MeshBasicMaterial).opacity = reduced ? 0 : 0.5 * (1 - tap);
+    }
+
     const mesh = cloud.current;
     if (mesh) {
-      apps.forEach((p, k) => {
-        dummy.position.copy(p).applyAxisAngle(Y_AXIS, t * 0.08);
+      apps.forEach((pt, k) => {
+        dummy.position.copy(pt).applyAxisAngle(Y_AXIS, t * 0.08);
         dummy.rotation.set(t * 0.3 + k, t * 0.2 + k, 0);
         dummy.scale.setScalar(0.001 + f * 0.17);
         dummy.updateMatrix();
@@ -199,22 +288,98 @@ function PhoneStation({ index, cursorRef, reduced, active }: StationProps) {
   return (
     <group>
       <group ref={group}>
-        <mesh>
-          <boxGeometry args={[1.75, 3.45, 0.16]} />
+        <RoundedBox args={[1.75, 3.45, 0.16]} radius={0.07} smoothness={4}>
           <meshStandardMaterial color="#121620" metalness={0.6} roughness={0.35} />
-          <Edges color="#3a4558" />
-        </mesh>
-        <mesh position={[0, 0, 0.085]}>
-          <planeGeometry args={[1.55, 3.2]} />
-          <meshBasicMaterial color="#0a1d2b" />
-        </mesh>
-        {widgets.map((w, k) => (
-          <mesh key={k} ref={(m) => { cards.current[k] = m; }} position={[w.x, w.y, 0.11]}>
-            <boxGeometry args={[w.w, w.h, 0.03]} />
-            <meshStandardMaterial color={BLUE} emissive={BLUE} emissiveIntensity={0.35} transparent opacity={0.55 + k * 0.07} />
+        </RoundedBox>
+        <UiRect w={1.6} h={3.3} r={0.14} color="#081723" position={[0, 0, 0.085]} />
+
+        {/* Status bar + AppBar */}
+        <group ref={(g) => { layers.current[0] = g; }}>
+          <UiRect w={0.38} h={0.1} r={0.05} color="#000000" position={[0, 1.5, 0]} />
+          <UiRect w={0.2} h={0.05} color={INK} opacity={0.7} position={[-0.52, 1.5, 0]} />
+          <UiRect w={0.14} h={0.06} r={0.015} color={INK} opacity={0.7} position={[0.54, 1.5, 0]} />
+          <UiRect w={1.5} h={0.3} r={0.08} color={BLUE} opacity={0.22} position={[0, 1.22, 0]} />
+          <mesh position={[-0.6, 1.22, 0.005]}>
+            <circleGeometry args={[0.07, 20]} />
+            <meshBasicMaterial color={INK} transparent opacity={0.8} />
           </mesh>
-        ))}
-        <Label show={active} position={[0, 2.05, 0]}>widget tree</Label>
+          <UiRect w={0.6} h={0.07} color={INK} opacity={0.85} position={[-0.12, 1.22, 0.005]} />
+        </group>
+
+        {/* Hero card with progress bar and switch */}
+        <group ref={(g) => { layers.current[1] = g; }}>
+          <UiRect w={1.4} h={0.62} r={0.1} color={BLUE} opacity={0.32} position={[0, 0.76, 0]} />
+          <UiRect w={0.7} h={0.08} color={INK} opacity={0.95} position={[-0.25, 0.92, 0.005]} />
+          <UiRect w={0.45} h={0.05} color={INK} opacity={0.5} position={[-0.375, 0.79, 0.005]} />
+          <UiRect w={0.26} h={0.13} r={0.065} color={INK} opacity={0.25} position={[0.49, 0.9, 0.005]} />
+          <group ref={knob} position={[0.44, 0.9, 0.01]}>
+            <mesh>
+              <circleGeometry args={[0.055, 20]} />
+              <meshBasicMaterial color={INK} />
+            </mesh>
+          </group>
+          <UiRect w={1.1} h={0.05} r={0.025} color={INK} opacity={0.18} position={[0, 0.6, 0.005]} />
+          <group ref={progress} position={[0, 0.6, 0.01]}>
+            <UiRect w={1.1} h={0.05} r={0.025} color={BLUE} />
+          </group>
+        </group>
+
+        {/* Choice chips */}
+        <group ref={(g) => { layers.current[2] = g; }}>
+          {[-0.46, 0, 0.46].map((x) => (
+            <UiRect key={x} w={0.4} h={0.16} r={0.08} color={INK} opacity={0.14} position={[x, 0.3, 0]} />
+          ))}
+          <group ref={chip} position={[-0.46, 0.3, 0.005]}>
+            <UiRect w={0.4} h={0.16} r={0.08} color={BLUE} opacity={0.85} />
+          </group>
+        </group>
+
+        {/* ListView feed */}
+        <group ref={(g) => { layers.current[3] = g; }}>
+          {Array.from({ length: 5 }, (_, k) => (
+            <group key={k} ref={(g) => { tiles.current[k] = g; }}>
+              <UiRect w={1.4} h={0.34} r={0.07} color={INK} opacity={0.07} />
+              <mesh position={[-0.53, 0, 0.005]}>
+                <circleGeometry args={[0.1, 20]} />
+                <meshBasicMaterial color={BLUE} transparent opacity={0.5 + (k % 3) * 0.2} />
+              </mesh>
+              <UiRect w={0.6 + (k % 2) * 0.2} h={0.06} color={INK} opacity={0.8} position={[-0.08 + (k % 2) * 0.1, 0.05, 0.005]} />
+              <UiRect w={0.5} h={0.045} color={INK} opacity={0.35} position={[-0.13, -0.06, 0.005]} />
+            </group>
+          ))}
+        </group>
+
+        {/* Bottom navigation bar */}
+        <group ref={(g) => { layers.current[4] = g; }}>
+          <UiRect w={1.5} h={0.36} r={0.12} color="#10293b" position={[0, -1.4, 0]} />
+          <group ref={tab} position={[-0.54, -1.4, 0.005]}>
+            <UiRect w={0.3} h={0.16} r={0.08} color={BLUE} opacity={0.45} />
+          </group>
+          {[-0.54, -0.18, 0.18, 0.54].map((x) => (
+            <mesh key={x} position={[x, -1.4, 0.01]}>
+              <circleGeometry args={[0.04, 16]} />
+              <meshBasicMaterial color={INK} transparent opacity={0.85} />
+            </mesh>
+          ))}
+        </group>
+
+        {/* FloatingActionButton */}
+        <group ref={(g) => { layers.current[5] = g; }}>
+          <mesh ref={ripple} position={[0.5, -0.95, -0.002]}>
+            <ringGeometry args={[0.15, 0.17, 32]} />
+            <meshBasicMaterial color={BLUE} transparent opacity={0} />
+          </mesh>
+          <group ref={fab} position={[0.5, -0.95, 0]}>
+            <mesh>
+              <circleGeometry args={[0.15, 32]} />
+              <meshBasicMaterial color={BLUE} />
+            </mesh>
+            <UiRect w={0.12} h={0.025} r={0.01} color="#081723" position={[0, 0, 0.005]} />
+            <UiRect w={0.025} h={0.12} r={0.01} color="#081723" position={[0, 0, 0.005]} />
+          </group>
+        </group>
+
+        <Label show={active} position={[0, 2.05, 0]}>widget tree · hot reload</Label>
       </group>
       <instancedMesh ref={cloud} args={[undefined, undefined, 35]}>
         <boxGeometry args={[1, 1, 1]} />
