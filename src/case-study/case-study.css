@@ -1,0 +1,131 @@
+/* Styles for /case-study that Tailwind utilities can't express on their own.
+   Colour tokens live in globals.css (@theme inline: paper, ivory, dim, rule, amber, signal, acc). */
+
+.cs-root {
+  min-height: 100svh;
+  background: var(--color-paper);
+  color: var(--color-ivory);
+  --acc: var(--color-ivory);
+}
+
+.cs-root ::selection {
+  background: color-mix(in srgb, var(--acc) 40%, transparent);
+}
+
+.cs-root :focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 3px;
+}
+
+[data-case="c1"] {
+  --acc: var(--color-amber);
+}
+
+[data-case="c2"] {
+  --acc: var(--color-signal);
+}
+
+/* Lenis drives scrolling here; native smooth-scroll on <html> would fight it. */
+html.lenis,
+html.lenis body {
+  height: auto;
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+.cs-root section[id],
+.cs-root [data-anchor] {
+  scroll-margin-top: 4rem;
+}
+
+/* Large outlined numerals (01, 02 …). */
+.cs-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--acc) 80%, transparent);
+  font-variant-numeric: lining-nums;
+}
+
+/* Pattern A — word reveal. Words start dim and light as scroll passes them. */
+.cs-word {
+  transition: opacity 0.25s ease, color 0.25s ease;
+  opacity: 0.18;
+}
+
+.cs-word[data-on="true"] {
+  opacity: 1;
+}
+
+/* Pattern B — inactive steps recede. Mobile and reduced motion keep everything at full strength. */
+@media (min-width: 768px) {
+  .cs-step {
+    transition: opacity 0.4s ease;
+  }
+  .cs-step[data-active="false"] {
+    opacity: 0.28;
+  }
+}
+
+/* Marquee ticker. */
+.cs-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: cs-marquee 38s linear infinite;
+}
+
+@keyframes cs-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* "Scroll" cue line. */
+.cs-scroll-cue {
+  animation: cs-cue 2.2s cubic-bezier(0.6, 0, 0.3, 1) infinite;
+  transform-origin: top;
+}
+
+@keyframes cs-cue {
+  0% {
+    transform: scaleY(0);
+  }
+  50% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  51% {
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+
+/* Recreated ransom window (scene 11) — an illustration, not the real program. */
+.cs-ransom {
+  background: #8f0f12;
+  color: #fff;
+  font-family: Tahoma, Verdana, var(--font-geist-sans), sans-serif;
+  box-shadow: 0 30px 80px -20px rgb(255 74 61 / 0.35);
+}
+
+.cs-ransom-bar {
+  background: linear-gradient(#e8e6e0, #cfccc4);
+  color: #111;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-word {
+    opacity: 1;
+  }
+  .cs-marquee-track,
+  .cs-scroll-cue {
+    animation: none;
+  }
+  .cs-step[data-active="false"] {
+    opacity: 1;
+  }
+}

@@ -6,6 +6,7 @@ const links = [
   ["Skills", "#skills"],
   ["Toolkit", "#toolkit"],
   ["Projects", "#projects"],
+  ["Case studies", "#case-studies"],
   ["Craft", "#craft"],
   ["Experience", "#experience"],
   ["API", "#api"],

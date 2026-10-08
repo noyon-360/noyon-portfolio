@@ -82,6 +82,20 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-space-grotesk);
+  --font-serif: var(--font-cs-serif), Georgia, serif;
+  /* /case-study accent: set per case via [data-case] in src/case-study/case-study.css. */
+  --color-acc: var(--acc, #ece8e1);
+}
+
+/* /case-study palette — fixed, independent of the portfolio theme. Emitted as real variables
+   (static) because case-study.css and the SVG fallbacks reference them directly. */
+@theme static {
+  --color-paper: #0a0a0a;
+  --color-ivory: #ece8e1;
+  --color-dim: #9d9890;
+  --color-rule: rgb(236 232 225 / 0.14);
+  --color-amber: #f2a93b;
+  --color-signal: #ff4a3d;
 }
 
 :root {

@@ -1,0 +1,52 @@
+// Every case study listed on /case-study. To add one: create src/app/case-study/<slug>/page.tsx,
+// then add an entry here. Newest first is not enforced; the list renders in this order.
+
+export type CaseStudyAccent = "amber" | "signal" | "ivory";
+
+export type CaseStudyEntry = {
+  /** URL segment: the page lives at /case-study/<slug>. Must match the folder name under src/app/case-study. */
+  slug: string;
+  title: string;
+  summary: string;
+  /** Shown on the card, e.g. "2025–26 · 2017". */
+  period: string;
+  /** Category pills. */
+  tags: string[];
+  /** One colour per incident covered; drives the card's cover. */
+  accents: CaseStudyAccent[];
+  /** Short labels drawn on the cover, one per accent. */
+  coverLabels: string[];
+  /** Reading time or scope, e.g. "19 questions". */
+  scope: string;
+};
+
+export const caseStudies: CaseStudyEntry[] = [
+  {
+    slug: "shwapno-data-breach",
+    title: "The Shwapno data breach",
+    summary:
+      "Attackers took a Bangladeshi supermarket chain's customer database and demanded a ransom. The company refused, and told no one. Seven months later the data was public.",
+    period: "2025–26 · Bangladesh",
+    tags: ["Data breach", "Incident response"],
+    accents: ["amber"],
+    coverLabels: ["Shwapno"],
+    scope: "10 questions · interactive 3D",
+  },
+  {
+    slug: "wannacry-eternalblue",
+    title: "WannaCry and EternalBlue",
+    summary:
+      "A leaked exploit turned ransomware into a worm that locked 200,000+ computers in 150 countries — two months after the fix was released.",
+    period: "2017 · Worldwide",
+    tags: ["Ransomware", "Patching"],
+    accents: ["signal"],
+    coverLabels: ["WannaCry"],
+    scope: "9 questions · interactive 3D",
+  },
+];
+
+export const caseStudyIndex = {
+  eyebrow: "Investigations",
+  title: "Case studies",
+  intro: "Scroll-driven investigations of real security incidents, written for readers who aren't security specialists.",
+};

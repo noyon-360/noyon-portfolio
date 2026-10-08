@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   // Static export for GitHub Pages. The workflow sets PAGES_BASE_PATH
   // (e.g. "/noyon-portfolio"); locally it's empty so dev runs at "/".
   output: "export",
+  // Emit /case-study/index.html and /case-study/<slug>/index.html, so nested pages resolve on GitHub Pages.
+  trailingSlash: true,
   basePath,
   images: { unoptimized: true },
   env: { NEXT_PUBLIC_BASE_PATH: basePath },

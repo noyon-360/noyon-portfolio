@@ -20,6 +20,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Case study
+
+`/case-study` lists the case studies as cards (the home page shows the newest three); each one lives at
+`/case-study/<slug>` (currently `shwapno-data-breach` and `wannacry-eternalblue`). See [src/case-study/README.md](src/case-study/README.md) for how to add one, run/deploy steps
+and the TODOs to fill before submitting.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

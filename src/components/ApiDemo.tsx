@@ -45,7 +45,7 @@ export default function ApiDemo() {
   return (
     <Section
       id="api"
-      index="08"
+      index="09"
       eyebrow="Playground"
       title="This portfolio has an API."
       intro="Pick an endpoint and send a real request — the same data that renders this page."

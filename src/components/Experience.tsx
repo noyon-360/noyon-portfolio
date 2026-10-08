@@ -3,7 +3,7 @@ import { Section } from "./Section";
 
 export default function Experience() {
   return (
-    <Section id="experience" index="07" eyebrow="Experience" title="Where the work happened.">
+    <Section id="experience" index="08" eyebrow="Experience" title="Where the work happened.">
       <div className="grid gap-10 lg:grid-cols-3">
         <ol className="relative space-y-10 border-l border-line pl-6 sm:pl-8 lg:col-span-2">
           {experience.map((e, i) => (

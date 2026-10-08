@@ -1,4 +1,5 @@
 import ApiDemo from "@/components/ApiDemo";
+import CaseStudies from "@/components/CaseStudies";
 import Contact from "@/components/Contact";
 import Craft from "@/components/Craft";
 import Experience from "@/components/Experience";
@@ -24,6 +25,7 @@ export default function Home() {
         <Skills />
         <ExpertiseJourney id="projects" index="04" title="Projects in 3D" entries={projectTour} />
         <Projects />
+        <CaseStudies />
         <Craft />
         <Experience />
         <ApiDemo />

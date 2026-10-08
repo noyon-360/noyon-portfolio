@@ -342,7 +342,7 @@ export default function Terminal() {
   return (
     <Section
       id="terminal"
-      index="09"
+      index="10"
       eyebrow="Terminal"
       title="Explore by command line."
       intro="A working shell for this portfolio. Read about my work, switch themes, or play a game — Flutter, hacking, design and more."
