@@ -19,16 +19,20 @@ It also appears on the portfolio home page (`src/components/CaseStudies.tsx`, th
 
 ## Current studies
 
-Three scroll-driven "interactive news investigations" for a non-technical reader, each a page of its own:
+Four scroll-driven "interactive news investigations" for a non-technical reader, each a page of its own:
 
 - **`/case-study/npm-supply-chain-attack`** — a poisoned npm package that spread across four client servers at a small Dhaka
   software agency (2026). The author's own incident, still under investigation. Three parts with their own accents: attack
   (signal red), response (amber), fix (green). Questions 01–18, plus Gap, Timeline, Evidence. Text lives in
   `studies/npm-supply-chain-attack.ts`; open values are visible `TODO:` strings, unconfirmed claims carry a stamp.
+- **`/case-study/mongodb-ransomware-attack`** — a production MongoDB database left open to the internet with authentication off
+  for nineteen months, backdoored and then wiped by an automated ransom campaign (2025–26). The author's own incident.
+  Accent: ice blue (`c4`). Questions 01–10, plus Timeline, Lessons, a Shwapno comparison and Evidence. Text lives in
+  `studies/mongodb-ransomware-attack.ts`; claims the logs don't prove carry a "Possible — unconfirmed" stamp.
 - **`/case-study/shwapno-data-breach`** — the Shwapno customer-data breach (Bangladesh, 2025–26). Accent: amber. Questions 01–10.
 - **`/case-study/wannacry-eternalblue`** — EternalBlue and the WannaCry attack (worldwide, 2017). Accent: signal red. Questions 01–09.
 
-Both share the layout, pattern components and 3D objects, and nothing visual with the portfolio's theme switcher.
+All share the layout, pattern components and 3D objects, and nothing visual with the portfolio's theme switcher.
 
 ## Run
 
@@ -67,9 +71,10 @@ src/app/case-study/
   shwapno-data-breach/page.tsx    Scene order for the Shwapno study
   wannacry-eternalblue/page.tsx   Scene order for the WannaCry study
   npm-supply-chain-attack/page.tsx  Scene order for the npm supply-chain study
+  mongodb-ransomware-attack/page.tsx  Scene order for the MongoDB ransomware study
 src/case-study/
   registry.ts         The list of studies shown as cards
-  studies/            One content file per newer study (npm-supply-chain-attack.ts)
+  studies/            One content file per newer study (npm-supply-chain-attack.ts, mongodb-ransomware-attack.ts)
   content.ts          Shared types, references, and every word on the Shwapno and WannaCry pages, typed (front, nav, closing, refs per study). Facts come only from the brief.
   case-study.css      Accents per case, word reveal, marquee, step fade, ransom window
   lib/scroll.tsx      Lenis ↔ GSAP ScrollTrigger, scrollToId, useReducedMotion, useCan3D

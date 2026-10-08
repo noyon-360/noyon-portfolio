@@ -1,8 +1,10 @@
 // Static SVG versions of every 3D object, shown on phones, under reduced motion, before 3D loads,
 // and to anyone without WebGL. Each one shows the object's end state. Decorative: the Stage carries alt text.
 import { c1Checklist, c1Shield, c2Pins, visualText } from "../content";
+import { mongoCollections, mongoVisual } from "../studies/mongodb-ransomware-attack";
 import { npmShieldLayers, npmVisual } from "../studies/npm-supply-chain-attack";
 import { BD_CENTER, BD_OUTLINE, illustrativeDots } from "./bangladesh";
+import { DRUMS, LAYER_OFFSETS, LINE_END, LINE_EVENTS, LINE_START, SCANNERS, SESSION_X } from "./mongodb";
 import { NET_BAD, NET_EDGES, NET_NODES, SERVER_CELLS, SWITCH_COUNT, SWITCH_SUSPECT, TOWER_BLOCKS, TOWER_WORST, TREE, TREE_PATH } from "./npm";
 import { rng } from "./util";
 
@@ -147,7 +149,7 @@ export function ReceiptSvg() {
   );
 }
 
-export function CrowdSvg() {
+export function CrowdSvg({ labels = visualText.crowd }: { labels?: string[] }) {
   const groups = [7, 3, 4, 3];
   const r = rng(4);
   return (
@@ -165,7 +167,7 @@ export function CrowdSvg() {
             );
           })}
           <text y={210} fontSize={8} fill={D} style={mono} textAnchor="middle">
-            {visualText.crowd[g].toUpperCase()}
+            {labels[g].toUpperCase()}
           </text>
         </g>
       ))}
@@ -207,8 +209,8 @@ export function PhoneSvg() {
   );
 }
 
-export function GaugeSvg() {
-  const { label, cards, note } = visualText.gauge;
+export function GaugeSvg({ gauge = visualText.gauge }: { gauge?: { label: string; cards: string[]; note: string } }) {
+  const { label, cards, note } = gauge;
   return (
     <Svg>
       <path d="M40,210 A100,100 0 1,1 240,210" stroke="#222" strokeWidth={16} />
@@ -517,7 +519,7 @@ export function NodeBoxSvg() {
   );
 }
 
-export function BeaconsSvg() {
+export function BeaconsSvg({ labels = npmVisual.beacons }: { labels?: string[] }) {
   const b = [
     [110, 70],
     [300, 100],
@@ -530,7 +532,7 @@ export function BeaconsSvg() {
           <circle cx={x} cy={y} r={14} fill={R} fillOpacity={0.18} />
           <circle cx={x} cy={y} r={6} fill={R} />
           <text x={x} y={y - 22} fontSize={9} fill={I} textAnchor="middle" style={mono}>
-            {npmVisual.beacons[i]}
+            {labels[i]}
           </text>
         </g>
       ))}
@@ -636,7 +638,7 @@ export function ChecklistSvg() {
   );
 }
 
-export function WallSvg() {
+export function WallSvg({ label = npmVisual.wall.wall }: { label?: string }) {
   return (
     <Svg>
       <rect x={40} y={110} width={50} height={120} fill="#161616" />
@@ -654,7 +656,7 @@ export function WallSvg() {
         </g>
       ))}
       <text x={300} y={282} fontSize={8} fill={D} style={mono}>
-        {npmVisual.wall.wall.toUpperCase()}
+        {label.toUpperCase()}
       </text>
     </Svg>
   );
@@ -771,6 +773,115 @@ export function GuardShieldSvg() {
           {String(i + 1).padStart(2, "0")} {label}
         </text>
       ))}
+    </Svg>
+  );
+}
+
+// ── MongoDB study ───────────────────────────────────────────────────────────
+
+const C = "var(--color-ice)";
+const TONE = { ivory: I, dim: D, amber: A, signal: R };
+/** Maps the 3D timeline's x (-4…4) onto the SVG's width. */
+const lx = (x: number) => r2(200 + x * 44);
+
+export function ExposureSvg() {
+  return (
+    <Svg>
+      <rect x={lx(LINE_START)} y={196} width={r2(lx(LINE_END) - lx(LINE_START))} height={6} fill="#2a2926" />
+      <rect x={lx(LINE_START)} y={196} width={r2(lx(LINE_END) - lx(LINE_START))} height={6} fill={C} fillOpacity={0.85} />
+      {Array.from({ length: 20 }, (_, i) => (
+        <line key={i} x1={r2(lx(LINE_START) + ((lx(LINE_END) - lx(LINE_START)) * i) / 19)} x2={r2(lx(LINE_START) + ((lx(LINE_END) - lx(LINE_START)) * i) / 19)} y1={206} y2={212} stroke={D} />
+      ))}
+      {SESSION_X.map((x) => (
+        <rect key={x} x={lx(x) - 2} y={170} width={4} height={24} fill={A} fillOpacity={0.4} />
+      ))}
+      {LINE_EVENTS.map((e, i) => (
+        <rect key={i} x={lx(e.x) - 4} y={r2(196 - e.h * 50)} width={8} height={r2(e.h * 50)} fill={TONE[e.tone]} />
+      ))}
+      <text x={lx(LINE_START)} y={232} fontSize={8} fill={D} style={mono}>
+        FEB 2025
+      </text>
+      <text x={lx(LINE_END)} y={232} fontSize={8} fill={D} style={mono} textAnchor="end">
+        SEP 2026
+      </text>
+      <text x={200} y={268} fontSize={8} fill={D} style={mono} textAnchor="middle">
+        {mongoVisual.timeline.note.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function OpenPortSvg() {
+  return (
+    <Svg>
+      {SCANNERS.slice(0, 14).map((s, i) => {
+        const x = r2(200 + s.from[0] * 30);
+        const y = r2(140 - s.from[1] * 30);
+        return (
+          <g key={i}>
+            <line x1={x} y1={y} x2={200} y2={132} stroke={R} strokeOpacity={0.25} strokeDasharray="3 4" />
+            <circle cx={x} cy={y} r={3} fill={R} />
+          </g>
+        );
+      })}
+      <rect x={140} y={70} width={120} height={150} fill="#141414" stroke={I} strokeOpacity={0.5} />
+      {[190, 200, 108].map((y) => (
+        <rect key={y} x={152} y={y} width={96} height={5} fill="#2a2926" />
+      ))}
+      <rect x={180} y={120} width={40} height={24} fill={C} fillOpacity={0.6} />
+      <text x={200} y={162} fontSize={9} fill={I} style={mono} textAnchor="middle">
+        {mongoVisual.port.port}
+      </text>
+      <text x={200} y={250} fontSize={8} fill={D} style={mono} textAnchor="middle">
+        {mongoVisual.port.lock.toUpperCase()} · {mongoVisual.port.note.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function CollectionsSvg() {
+  return (
+    <Svg>
+      {DRUMS.map(([x, z], i) => {
+        const cx = r2(200 + x * 58);
+        const cy = r2(140 - z * 62);
+        return (
+          <g key={i}>
+            <ellipse cx={cx} cy={cy} rx={20} ry={8} stroke={D} strokeOpacity={0.5} strokeDasharray="3 3" />
+            <text x={cx} y={cy + 22} fontSize={6} fill={D} style={mono} textAnchor="middle">
+              {mongoCollections[i].name}
+            </text>
+          </g>
+        );
+      })}
+      <rect x={186} y={118} width={28} height={28} fill={R} />
+      <text x={200} y={268} fontSize={8} fill={R} style={mono} textAnchor="middle">
+        {mongoVisual.ransom.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function HoleLayersSvg() {
+  return (
+    <Svg>
+      {LAYER_OFFSETS.map((_, i) => {
+        const x = 70 + i * 64;
+        const y = 70 + i * 14;
+        return (
+          <g key={i}>
+            <path d={`M${x},${y} l60,-20 l0,150 l-60,20 Z`} fill={I} fillOpacity={0.12 + i * 0.03} stroke={I} strokeOpacity={0.4} />
+            <ellipse cx={x + 30} cy={y + 65} rx={8} ry={14} fill="#0a0a0a" stroke={I} strokeOpacity={0.5} />
+            <text x={x + 30} y={y + 182} fontSize={7} fill={D} style={mono} textAnchor="middle">
+              {mongoVisual.layers[i].toUpperCase()}
+            </text>
+          </g>
+        );
+      })}
+      <line x1={40} y1={122} x2={360} y2={192} stroke={R} strokeWidth={3} />
+      <text x={200} y={286} fontSize={8} fill={D} style={mono} textAnchor="middle">
+        ILLUSTRATIVE
+      </text>
     </Svg>
   );
 }

@@ -38,6 +38,10 @@
   --acc: var(--color-green);
 }
 
+[data-case="c4"] {
+  --acc: var(--color-ice);
+}
+
 /* Lenis drives scrolling here; native smooth-scroll on <html> would fight it. */
 html.lenis,
 html.lenis body {

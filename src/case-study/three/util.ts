@@ -8,6 +8,7 @@ export const COLOR = {
   amber: "#f2a93b",
   signal: "#ff4a3d",
   green: "#6fd08c",
+  ice: "#6cc6e4",
 };
 
 export const clamp01 = (v: number) => Math.min(1, Math.max(0, v));

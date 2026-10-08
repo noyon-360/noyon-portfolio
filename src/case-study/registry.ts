@@ -1,7 +1,7 @@
 // Every case study listed on /case-study. To add one: create src/app/case-study/<slug>/page.tsx,
 // then add an entry here. Newest first is not enforced; the list renders in this order.
 
-export type CaseStudyAccent = "amber" | "signal" | "ivory" | "green";
+export type CaseStudyAccent = "amber" | "signal" | "ivory" | "green" | "ice";
 
 export type CaseStudyEntry = {
   /** URL segment: the page lives at /case-study/<slug>. Must match the folder name under src/app/case-study. */
@@ -31,6 +31,17 @@ export const caseStudies: CaseStudyEntry[] = [
     accents: ["signal", "amber", "green"],
     coverLabels: ["Attack", "Response", "Fix"],
     scope: "18 questions · interactive 3D",
+  },
+  {
+    slug: "mongodb-ransomware-attack",
+    title: "Nineteen months with the door open",
+    summary:
+      "A production MongoDB database sat on the open internet with authentication switched off. Scanners found it, planted a backdoor account, then wiped every collection and left a ransom note. There was no backup.",
+    period: "2025–26 · UK business",
+    tags: ["Ransomware", "Misconfiguration", "Incident response"],
+    accents: ["ice"],
+    coverLabels: ["MongoDB"],
+    scope: "10 questions · interactive 3D",
   },
   {
     slug: "shwapno-data-breach",
