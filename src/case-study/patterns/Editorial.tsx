@@ -22,10 +22,10 @@ export function MetaLine({ meta, className = "" }: { meta: Meta; className?: str
   );
 }
 
-/** Links each source to its entry under References. */
-export function SourceTags({ refs }: { refs: RefId[] }) {
+/** Links each source to its entry under References. Opinion scenes say so; others with no sources show nothing. */
+export function SourceTags({ refs, opinion = false }: { refs: RefId[]; opinion?: boolean }) {
   if (!refs.length) {
-    return <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-dim">Source: author&apos;s opinion</p>;
+    return opinion ? <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-dim">Source: author&apos;s opinion</p> : <span />;
   }
   return (
     <p className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-dim">

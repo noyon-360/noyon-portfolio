@@ -118,7 +118,7 @@ export default function Scene({
 
         {children && <div className="mx-auto mt-16 max-w-7xl">{children}</div>}
 
-        <SceneFooter refs={scene.refs} next={scene.next} />
+        <SceneFooter refs={scene.refs} next={scene.next} opinion={scene.meta.category === "Opinion"} />
       </section>
     </SceneContext.Provider>
   );
@@ -154,10 +154,10 @@ export function SceneHeader({
   );
 }
 
-export function SceneFooter({ refs, next }: { refs: QuestionScene["refs"]; next: string }) {
+export function SceneFooter({ refs, next, opinion }: { refs: QuestionScene["refs"]; next: string; opinion?: boolean }) {
   return (
     <footer className="mx-auto mt-16 flex max-w-7xl flex-col gap-6 border-t border-rule pt-6 md:flex-row md:items-baseline md:justify-between">
-      <SourceTags refs={refs} />
+      <SourceTags refs={refs} opinion={opinion} />
       <NextLine>{next}</NextLine>
     </footer>
   );

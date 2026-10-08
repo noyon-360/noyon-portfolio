@@ -49,7 +49,7 @@ export default function WannaCryPage() {
         <People />
         <OtherAttacks />
         <Closing closing={wannacryClosing} related="shwapno-data-breach" />
-        <References ids={wannacryRefs} />
+        <References ids={wannacryRefs} caseId="c2" />
       </main>
     </>
   );

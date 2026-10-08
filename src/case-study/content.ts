@@ -14,7 +14,6 @@ export type RefId =
   | "ann"
   | "nao"
   | "ms"
-  | "voa"
   | "malwaretech"
   | "doj"
   | "fbi"
@@ -458,11 +457,13 @@ export const c1Claim = {
   next: "So what should other organizations learn?",
 };
 
+// Sidebar: the confirmed answer, as opposed to the claims in c1Claim. Must stay consistent with it.
 export const c1Who = {
   label: "Sidebar",
   title: "Who did it?",
-  body: "The attackers have not been publicly identified. No group has been named in the sources used for this report, and none is suggested here.",
-  silhouette: "Unknown",
+  body: "Still unconfirmed. Two ransomware groups, Qilin and LockBit 5.0, have claimed the attack, but Shwapno, the police and the news reports reviewed have not confirmed either claim. Until one is confirmed, who actually carried out the attack remains unknown.",
+  silhouette: "Unconfirmed",
+  link: { label: "See the claims", href: "#claimed-by" },
 };
 
 export const c1Lesson = {
@@ -514,7 +515,7 @@ export const c2Scenes: QuestionScene[] = [
     caseId: "c2",
     label: "The malware",
     question: "What is WannaCry?",
-    meta: { category: "Ransomware", date: "12 May 2017", source: "Europol / press" },
+    meta: { category: "Ransomware", date: "12 May 2017", source: "Press reports" },
     steps: [
       { kicker: "Ransomware", body: "It encrypts your files — scrambles them so only the attacker's key can unlock them." },
       { kicker: "The demand", body: "A red window demands about $300 in Bitcoin, rising to $600 if you wait." },
@@ -524,7 +525,7 @@ export const c2Scenes: QuestionScene[] = [
       },
     ],
     alt: "A recreation of the WannaCry ransom window: red frame, countdown timers and a payment demand. The Bitcoin address is redacted.",
-    refs: ["voa"],
+    refs: [],
     next: "How could it spread without a click?",
   },
   {
@@ -553,7 +554,7 @@ export const c2Scenes: QuestionScene[] = [
       },
     ],
     alt: "Two glass boxes side by side. Blocks pour into the first, overflow its rim and spill into its neighbour.",
-    refs: ["ms", "voa"],
+    refs: ["ms"],
     next: "Once inside one computer, how did it reach 150 countries?",
   },
   {
@@ -562,7 +563,7 @@ export const c2Scenes: QuestionScene[] = [
     caseId: "c2",
     label: "The spread",
     question: "How did WannaCry spread around the world?",
-    meta: { category: "Worm", date: "12 May 2017, from 07:44 UTC", source: "Europol / MalwareTech" },
+    meta: { category: "Worm", date: "12 May 2017, from 07:44 UTC", source: "MalwareTech" },
     steps: [
       { kicker: "Scan", body: "An infected computer scans the internet and its own network for machines with port 445 open." },
       { kicker: "Break in", body: "It uses EternalBlue to get into any unpatched machine it finds." },
@@ -573,7 +574,7 @@ export const c2Scenes: QuestionScene[] = [
       },
     ],
     alt: "A globe with red arcs jumping from node to node. A UTC clock and a country counter advance as you scroll.",
-    refs: ["voa", "malwaretech"],
+    refs: ["malwaretech"],
     next: "Where did it hit hardest?",
   },
   {
@@ -592,7 +593,7 @@ export const c2Scenes: QuestionScene[] = [
       },
     ],
     alt: "A globe with pins on the places named in the text — the NHS, Telefonica, Renault and Nissan, Deutsche Bahn, FedEx, China, India, Russia, Ukraine and Taiwan — each with a short text card. Pin positions are approximate.",
-    refs: ["nao", "voa"],
+    refs: ["nao"],
     next: "What did it all add up to?",
   },
   {
@@ -601,7 +602,7 @@ export const c2Scenes: QuestionScene[] = [
     caseId: "c2",
     label: "The bill",
     question: "What were the major consequences?",
-    meta: { category: "Impact", date: "2017", source: "NAO / Europol" },
+    meta: { category: "Impact", date: "2017", source: "UK National Audit Office" },
     steps: [
       {
         kicker: "Scale",
@@ -613,7 +614,7 @@ export const c2Scenes: QuestionScene[] = [
       },
     ],
     alt: "A tiny pile of coins labelled $140,000 beside a towering bar labelled billions in damage. Not to scale.",
-    refs: ["nao", "voa"],
+    refs: ["nao"],
     next: "What did that look like on the ground?",
   },
   {
@@ -841,17 +842,57 @@ export const wannacryClosing: Closing = {
 
 // ── References ──────────────────────────────────────────────────────────────
 
-// Exact article URLs were not supplied with the brief. Where one is unknown, the outlet's home
-// page is linked and the entry carries a TODO so it is replaced before submission.
+// Each source is linked to the exact article. `todo: true` marks an entry still waiting for one.
 // `tag` is the short label on in-page source tags, for outlets cited more than once.
-export const references: { id: RefId; outlet: string; title: string; href: string; todo?: boolean; tag?: string }[] = [
-  { id: "tbs", outlet: "The Business Standard", title: "Coverage of the Shwapno data breach", href: "https://www.tbsnews.net/", todo: true },
-  { id: "dailystar", outlet: "The Daily Star", title: "Coverage of the Shwapno data breach", href: "https://www.thedailystar.net/", todo: true },
-  { id: "fe", outlet: "The Financial Express", title: "Coverage of the Shwapno data breach", href: "https://thefinancialexpress.com.bd/", todo: true },
-  { id: "unb", outlet: "UNB", title: "Coverage of the Shwapno data breach", href: "https://unb.com.bd/", todo: true },
-  { id: "jago", outlet: "Jago News", title: "Coverage of the Shwapno data breach", href: "https://www.jagonews24.com/", todo: true },
-  { id: "dhakatribune", outlet: "Dhaka Tribune", title: "Coverage of the Shwapno data breach", href: "https://www.dhakatribune.com/", todo: true },
-  { id: "ann", outlet: "Asia News Network", title: "Coverage of the Shwapno data breach", href: "https://asianews.network/", todo: true },
+export const references: { id: RefId; outlet: string; title: string; href: string; todo?: boolean; tag?: string; date?: string }[] = [
+  {
+    id: "tbs",
+    outlet: "The Business Standard",
+    title: "Retail chain Shwapno hit by customer data breach, hackers seek $1.5m",
+    href: "https://www.tbsnews.net/bangladesh/retail-chain-shwapno-hit-customer-data-breach-hackers-seek-15m-1396081",
+    date: "28 March 2026",
+  },
+  {
+    id: "dailystar",
+    outlet: "The Daily Star",
+    title: "Shwapno's database hacked; 40 lakh customers' details at risk",
+    href: "https://www.thedailystar.net/business/news/shwapnos-customer-data-hacked-15-million-ransom-sought-4137566",
+  },
+  {
+    id: "fe",
+    outlet: "The Financial Express",
+    title: "Hackers demand $1.5m ransom in major cyberattack",
+    href: "https://thefinancialexpress.com.bd/home/hackers-demand-15m-ransom-in-major-cyberattack",
+    date: "29 March 2026",
+  },
+  {
+    id: "unb",
+    outlet: "UNB",
+    title: "Shwapno website hacked, customer data leaked online",
+    href: "https://unb.com.bd/category/Business/shwapno-website-hacked-customer-data-leaked-online/182441",
+    date: "29 March 2026",
+  },
+  {
+    id: "jago",
+    outlet: "Jago News",
+    title: "Shwapno faces legal notice over customer data leak",
+    href: "https://www.jagonews24.com/en/business/news/91326",
+    date: "31 March 2026",
+  },
+  {
+    id: "dhakatribune",
+    outlet: "Dhaka Tribune",
+    title: "Your data is not safe",
+    href: "https://www.dhakatribune.com/opinion/longform/408921/your-data-is-not-safe",
+    date: "29 April 2026",
+  },
+  {
+    id: "ann",
+    outlet: "Asia News Network",
+    title: "Why Bangladesh's new data protection law may fail to protect your data",
+    href: "https://asianews.network/why-bangladeshs-new-data-protection-law-may-fail-to-protect-your-data/",
+    date: "8 July 2026",
+  },
   {
     id: "nao",
     outlet: "UK National Audit Office",
@@ -864,7 +905,6 @@ export const references: { id: RefId; outlet: string; title: string; href: strin
     title: "Security Bulletin MS17-010",
     href: "https://learn.microsoft.com/en-us/security-updates/securitybulletins/2017/ms17-010",
   },
-  { id: "voa", outlet: "VOA / Europol", title: "WannaCry reach and ransom figures", href: "https://www.voanews.com/", todo: true },
   {
     id: "malwaretech",
     outlet: "MalwareTech blog",
@@ -881,27 +921,52 @@ export const references: { id: RefId; outlet: string; title: string; href: strin
   {
     id: "qilinlisting",
     outlet: "ransomware.live listing via hendryadrian.com",
-    title: "Ransom! Shwapno, MAR-2026",
-    href: "https://www.hendryadrian.com/",
-    todo: true,
+    title: "Ransom! Shwapno (MAR-2026)",
+    href: "https://www.hendryadrian.com/ransom-shwapno-mar-2026/",
+    date: "18 March 2026",
   },
-  { id: "cybelangel", outlet: "CybelAngel", title: "Qilin Ransomware: Attack Methods and 2026 Status", href: "https://cybelangel.com/", todo: true },
-  { id: "s2w", outlet: "S2W", title: "Threat Group Profiling: LockBit 5.0", href: "https://s2w.inc/", todo: true },
+  {
+    id: "cybelangel",
+    outlet: "CybelAngel",
+    title: "Qilin Ransomware: Attack Methods and 2026 Status",
+    href: "https://cybelangel.com/blog/qilin-ransomware-tactics-attack/",
+    date: "12 August 2026, updated 29 September 2026",
+  },
+  {
+    id: "s2w",
+    outlet: "S2W",
+    title: "Threat Group Profiling: LockBit 5.0",
+    href: "https://s2w.inc/en/resources/1002",
+    date: "20 January 2026",
+  },
   {
     id: "dexposelockbit",
     outlet: "DeXpose",
     tag: "DeXpose · LockBit 5.0",
     title: "LockBit 5.0 Targets Shwapno in Bangladesh Ransomware Attack",
-    href: "https://www.dexpose.io/",
-    todo: true,
+    href: "https://www.dexpose.io/lockbit-5-0-targets-shwapno-in-bangladesh-ransomware-attack/",
+    date: "27 December 2025",
   },
-  { id: "dexposeqilin", outlet: "DeXpose", tag: "DeXpose · Qilin", title: "Qilin Targets Retailer Shwapno in Ransomware Attack", href: "https://www.dexpose.io/", todo: true },
-  { id: "arete", outlet: "Arete", title: "LockBit 5.0: The RaaS That Refuses to Go Away", href: "https://areteir.com/", todo: true },
+  {
+    id: "dexposeqilin",
+    outlet: "DeXpose",
+    tag: "DeXpose · Qilin",
+    title: "Qilin Targets Retailer Shwapno in Ransomware Attack",
+    href: "https://www.dexpose.io/qilin-targets-retailer-shwapno-in-ransomware-attack/",
+    date: "18 March 2026",
+  },
+  {
+    id: "arete",
+    outlet: "Arete",
+    title: "LockBit 5.0: The RaaS That Refuses to Go Away",
+    href: "https://areteir.com/resources/lockbit-5-0-ransomware-threat-resurgence",
+    date: "20 January 2026",
+  },
 ];
 
 // Which references each study lists, in order.
 export const shwapnoRefs: RefId[] = ["tbs", "dailystar", "fe", "unb", "jago", "dhakatribune", "ann", "dexposelockbit", "dexposeqilin", "qilinlisting", "cybelangel", "arete", "s2w"];
-export const wannacryRefs: RefId[] = ["nao", "ms", "voa", "malwaretech", "doj", "fbi"];
+export const wannacryRefs: RefId[] = ["nao", "ms", "malwaretech", "doj", "fbi"];
 
 // ── Navigation: rail and index overlay (one set per study) ──────────────────
 

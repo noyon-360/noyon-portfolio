@@ -48,9 +48,8 @@ To deploy somewhere else, upload the `out/` folder to any static host. If the si
 
 ## Before submitting
 
-Search the page (or `content.ts`) for **`TODO`**. Every one is shown on the page in amber until it's filled in:
-
-- References: exact article URLs and dates for the Bangladeshi press, VOA/Europol, and the Qilin/LockBit sources (`references`, `todo: true`).
+Every reference links to its exact article. If you add a source without one, set `todo: true` on its entry in
+`references` (in `content.ts`) and it shows an amber TODO on the page until it's filled in.
 
 ## Structure
 

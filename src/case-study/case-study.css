@@ -104,6 +104,31 @@ html.lenis body {
   }
 }
 
+/* Reference row the reader just jumped to: three accent pulses, then it settles back.
+   Starts after a short delay so the smooth scroll has mostly arrived. */
+.cs-flash {
+  animation: cs-flash 2.6s ease-out 0.45s both;
+}
+
+@keyframes cs-flash {
+  0%,
+  33%,
+  66% {
+    background: color-mix(in srgb, var(--acc) 26%, transparent);
+    box-shadow: inset 3px 0 0 var(--acc);
+  }
+  16%,
+  50%,
+  83% {
+    background: color-mix(in srgb, var(--acc) 6%, transparent);
+    box-shadow: inset 3px 0 0 var(--acc);
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 3px 0 0 transparent;
+  }
+}
+
 /* Recreated ransom window (scene 11) — an illustration, not the real program. */
 .cs-ransom {
   background: #8f0f12;
@@ -127,5 +152,11 @@ html.lenis body {
   }
   .cs-step[data-active="false"] {
     opacity: 1;
+  }
+  /* No blinking: mark the row with a steady accent outline instead. */
+  .cs-flash {
+    animation: none;
+    background: color-mix(in srgb, var(--acc) 14%, transparent);
+    box-shadow: inset 3px 0 0 var(--acc);
   }
 }

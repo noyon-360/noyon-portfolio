@@ -49,7 +49,7 @@ export default function ShwapnoPage() {
         <WhoDidIt />
 
         <Closing closing={shwapnoClosing} related="wannacry-eternalblue" />
-        <References ids={shwapnoRefs} />
+        <References ids={shwapnoRefs} caseId="c1" />
       </main>
     </>
   );
