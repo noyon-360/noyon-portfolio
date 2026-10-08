@@ -22,14 +22,31 @@ export function MetaLine({ meta, className = "" }: { meta: Meta; className?: str
   );
 }
 
-/** Links each source to its entry under References. Opinion scenes say so; others with no sources show nothing. */
-export function SourceTags({ refs, opinion = false }: { refs: RefId[]; opinion?: boolean }) {
-  if (!refs.length) {
+/** A visible status stamp for statements that are not confirmed ("To verify", "Unconfirmed"). */
+export function Stamp({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <span className={`inline-flex items-center border border-dashed border-amber px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-amber ${className}`}>
+      {children}
+    </span>
+  );
+}
+
+/**
+ * Links each source to its entry under References, and each evidence id to #ev-<id>.
+ * Opinion scenes say so; others with no sources show nothing.
+ */
+export function SourceTags({ refs, evidence = [], opinion = false }: { refs: RefId[]; evidence?: string[]; opinion?: boolean }) {
+  if (!refs.length && !evidence.length) {
     return opinion ? <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-dim">Source: author&apos;s opinion</p> : <span />;
   }
   return (
     <p className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-dim">
       <span>Sources</span>
+      {evidence.map((id) => (
+        <a key={id} href={`#ev-${id}`} className="rounded border border-rule px-2 py-0.5 transition-colors hover:border-acc hover:text-ivory">
+          Evidence {id.toUpperCase()}
+        </a>
+      ))}
       {refs.map((id) => (
         <a key={id} href={`#ref-${id}`} className="rounded border border-rule px-2 py-0.5 transition-colors hover:border-acc hover:text-ivory">
           {(() => {

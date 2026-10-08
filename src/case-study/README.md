@@ -19,8 +19,12 @@ It also appears on the portfolio home page (`src/components/CaseStudies.tsx`, th
 
 ## Current studies
 
-Two scroll-driven "interactive news investigations" for a non-technical reader, each a page of its own:
+Three scroll-driven "interactive news investigations" for a non-technical reader, each a page of its own:
 
+- **`/case-study/npm-supply-chain-attack`** — a poisoned npm package that spread across four client servers at a small Dhaka
+  software agency (2026). The author's own incident, still under investigation. Three parts with their own accents: attack
+  (signal red), response (amber), fix (green). Questions 01–18, plus Gap, Timeline, Evidence. Text lives in
+  `studies/npm-supply-chain-attack.ts`; open values are visible `TODO:` strings, unconfirmed claims carry a stamp.
 - **`/case-study/shwapno-data-breach`** — the Shwapno customer-data breach (Bangladesh, 2025–26). Accent: amber. Questions 01–10.
 - **`/case-study/wannacry-eternalblue`** — EternalBlue and the WannaCry attack (worldwide, 2017). Accent: signal red. Questions 01–09.
 
@@ -62,9 +66,11 @@ src/app/case-study/
   page.tsx            The card list
   shwapno-data-breach/page.tsx    Scene order for the Shwapno study
   wannacry-eternalblue/page.tsx   Scene order for the WannaCry study
+  npm-supply-chain-attack/page.tsx  Scene order for the npm supply-chain study
 src/case-study/
   registry.ts         The list of studies shown as cards
-  content.ts          Every word on both study pages, typed (front, nav, closing, refs per study). Facts come only from the brief.
+  studies/            One content file per newer study (npm-supply-chain-attack.ts)
+  content.ts          Shared types, references, and every word on the Shwapno and WannaCry pages, typed (front, nav, closing, refs per study). Facts come only from the brief.
   case-study.css      Accents per case, word reveal, marquee, step fade, ransom window
   lib/scroll.tsx      Lenis ↔ GSAP ScrollTrigger, scrollToId, useReducedMotion, useCan3D
   patterns/           Shared components for patterns A–I

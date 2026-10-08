@@ -20,6 +20,26 @@ export default function Closing({ closing, related }: { closing: ClosingContent;
             <p className="mt-4 max-w-2xl text-lg text-dim">{closing.body}</p>
           </div>
 
+          {closing.compare && (
+            <div className="mt-16 grid gap-px border border-rule bg-rule md:grid-cols-2">
+              {[closing.compare.had, closing.compare.needed].map((col, c) => (
+                <div key={col.title} className="bg-paper p-6 sm:p-10">
+                  <h3 className={`font-mono text-xs uppercase tracking-[0.22em] ${c ? "text-acc" : "text-dim"}`}>{col.title}</h3>
+                  <ul className="mt-6">
+                    {col.items.map((item) => (
+                      <li key={item} className="flex items-baseline gap-4 border-t border-rule py-4 font-serif text-3xl leading-tight">
+                        <span aria-hidden="true" className={`font-mono text-sm ${c ? "text-acc" : "text-dim"}`}>
+                          {c ? "+" : "✓"}
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+
           <h3 className="mt-24 font-mono text-xs uppercase tracking-[0.22em] text-dim">({closing.todayTitle})</h3>
           <ul className="mt-6 border-t border-rule">
             {closing.today.map((t, i) => (

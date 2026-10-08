@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { CaseId } from "../content";
 import { ScrollTrigger } from "../lib/scroll";
 
 /**
@@ -17,7 +18,7 @@ export default function WordReveal({
   note,
 }: {
   id: string;
-  caseId: "c1" | "c2";
+  caseId: CaseId;
   eyebrow: string;
   title: string;
   text: string;

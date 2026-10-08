@@ -25,6 +25,19 @@
   --acc: var(--color-signal);
 }
 
+/* npm supply-chain study: one accent per part. */
+[data-case="c3a"] {
+  --acc: var(--color-signal);
+}
+
+[data-case="c3b"] {
+  --acc: var(--color-amber);
+}
+
+[data-case="c3c"] {
+  --acc: var(--color-green);
+}
+
 /* Lenis drives scrolling here; native smooth-scroll on <html> would fight it. */
 html.lenis,
 html.lenis body {
@@ -140,6 +153,12 @@ html.lenis body {
 .cs-ransom-bar {
   background: linear-gradient(#e8e6e0, #cfccc4);
   color: #111;
+}
+
+/* Pattern A blur used for the scrambled command texture (scene 04): readable markers sit on top. */
+.cs-scramble {
+  filter: blur(3px);
+  user-select: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

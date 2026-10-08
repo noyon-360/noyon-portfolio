@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import type { QuestionScene } from "../content";
 import { ScrollTrigger } from "../lib/scroll";
-import { MetaLine, NextLine, SourceTags } from "./Editorial";
+import { MetaLine, NextLine, SourceTags, Stamp } from "./Editorial";
 
 type SceneState = {
   /** 0–1 scroll progress through the scene body; read every frame by the 3D objects. */
@@ -81,7 +81,7 @@ export default function Scene({
   return (
     <SceneContext.Provider value={state}>
       <section id={scene.id} data-case={scene.caseId} aria-labelledby={headingId} className="relative border-t border-rule px-4 py-24 sm:px-8 md:py-32 lg:pr-24">
-        <SceneHeader n={scene.n} label={scene.label} headingId={headingId} question={scene.question} meta={scene.meta} />
+        <SceneHeader n={scene.n} label={scene.label} headingId={headingId} question={scene.question} meta={scene.meta} flag={scene.flag} />
         {lead && <div className="mx-auto mt-14 max-w-7xl">{lead}</div>}
 
         <div ref={body} className="mx-auto mt-14 grid max-w-7xl gap-10 md:mt-20 md:grid-cols-12 md:gap-8">
@@ -103,6 +103,7 @@ export default function Scene({
               <li key={s.kicker} data-step className="cs-step flex flex-col justify-center py-5 md:min-h-[62vh]" data-active={i === active}>
                 <p className="font-mono text-xs uppercase tracking-[0.18em] text-acc">
                   {String(i + 1).padStart(2, "0")} — {s.kicker}
+                  {s.flag && <Stamp className="ml-3 align-middle">{s.flag}</Stamp>}
                 </p>
                 <p className="mt-3 text-xl leading-snug text-ivory md:text-[1.6rem] md:leading-[1.3]">{s.body}</p>
               </li>
@@ -118,7 +119,7 @@ export default function Scene({
 
         {children && <div className="mx-auto mt-16 max-w-7xl">{children}</div>}
 
-        <SceneFooter refs={scene.refs} next={scene.next} opinion={scene.meta.category === "Opinion"} />
+        <SceneFooter refs={scene.refs} evidence={scene.evidence} next={scene.next} opinion={scene.meta.category === "Opinion"} />
       </section>
     </SceneContext.Provider>
   );
@@ -130,12 +131,14 @@ export function SceneHeader({
   headingId,
   question,
   meta,
+  flag,
 }: {
   n: string;
   label: string;
   headingId: string;
   question: string;
   meta: QuestionScene["meta"];
+  flag?: string;
 }) {
   return (
     <header className="mx-auto max-w-7xl">
@@ -150,14 +153,15 @@ export function SceneHeader({
         </h2>
       </div>
       <MetaLine meta={meta} className="mt-8" />
+      {flag && <Stamp className="mt-5">{flag}</Stamp>}
     </header>
   );
 }
 
-export function SceneFooter({ refs, next, opinion }: { refs: QuestionScene["refs"]; next: string; opinion?: boolean }) {
+export function SceneFooter({ refs, evidence, next, opinion }: { refs: QuestionScene["refs"]; evidence?: string[]; next: string; opinion?: boolean }) {
   return (
     <footer className="mx-auto mt-16 flex max-w-7xl flex-col gap-6 border-t border-rule pt-6 md:flex-row md:items-baseline md:justify-between">
-      <SourceTags refs={refs} opinion={opinion} />
+      <SourceTags refs={refs} evidence={evidence} opinion={opinion} />
       <NextLine>{next}</NextLine>
     </footer>
   );

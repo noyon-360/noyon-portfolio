@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { c1Shield } from "../content";
 import { COLOR, damp, ramp } from "./util";
 
-function shieldShape(s: number) {
+export function shieldShape(s: number) {
   const shape = new THREE.Shape();
   shape.moveTo(-1.5 * s, 1.7 * s);
   shape.lineTo(1.5 * s, 1.7 * s);

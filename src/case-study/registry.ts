@@ -1,7 +1,7 @@
 // Every case study listed on /case-study. To add one: create src/app/case-study/<slug>/page.tsx,
 // then add an entry here. Newest first is not enforced; the list renders in this order.
 
-export type CaseStudyAccent = "amber" | "signal" | "ivory";
+export type CaseStudyAccent = "amber" | "signal" | "ivory" | "green";
 
 export type CaseStudyEntry = {
   /** URL segment: the page lives at /case-study/<slug>. Must match the folder name under src/app/case-study. */
@@ -21,6 +21,17 @@ export type CaseStudyEntry = {
 };
 
 export const caseStudies: CaseStudyEntry[] = [
+  {
+    slug: "npm-supply-chain-attack",
+    title: "One install command, four servers",
+    summary:
+      "A poisoned npm package slipped into routine installs and spread a hidden remote-control program across four client servers at a small Dhaka software agency. A first-hand account, still under investigation.",
+    period: "2026 · Dhaka",
+    tags: ["Supply chain", "npm", "Incident response"],
+    accents: ["signal", "amber", "green"],
+    coverLabels: ["Attack", "Response", "Fix"],
+    scope: "18 questions · interactive 3D",
+  },
   {
     slug: "shwapno-data-breach",
     title: "The Shwapno data breach",

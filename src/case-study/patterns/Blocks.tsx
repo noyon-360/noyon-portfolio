@@ -1,5 +1,5 @@
 // Static editorial blocks: definition card (D), pull quote (H), marquee ticker, card grid.
-import type { Card } from "../content";
+import type { Card, CaseId } from "../content";
 import { Pill } from "./Editorial";
 
 type Definition = { term: string; say: string; pos: string; meaning: string; synonyms: string[] };
@@ -26,7 +26,7 @@ export function DefinitionCard({ def }: { def: Definition }) {
 }
 
 /** Pattern H — one sentence, full screen, nothing else. The heading is for screen readers and the rail. */
-export function PullQuote({ id, n, caseId, quote, label }: { id: string; n?: string; caseId?: "c1" | "c2"; quote: string; label: string }) {
+export function PullQuote({ id, n, caseId, quote, label }: { id: string; n?: string; caseId?: CaseId; quote: string; label: string }) {
   return (
     <section id={id} data-case={caseId} aria-labelledby={`${id}-h`} className="flex min-h-svh items-center justify-center border-t border-rule px-4 py-24 sm:px-8 lg:pr-24">
       <h2 id={`${id}-h`} className="sr-only">
@@ -43,7 +43,7 @@ export function PullQuote({ id, n, caseId, quote, label }: { id: string; n?: str
 }
 
 /** Ticker strip between chapters. Decorative copy is aria-hidden; the list is read once. */
-export function Marquee({ items, caseId }: { items: string[]; caseId?: "c1" | "c2" }) {
+export function Marquee({ items, caseId }: { items: string[]; caseId?: CaseId }) {
   const row = (hidden: boolean) => (
     <ul aria-hidden={hidden || undefined} className="flex shrink-0 items-center">
       {items.map((t, i) => (

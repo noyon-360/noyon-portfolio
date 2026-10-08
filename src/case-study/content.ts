@@ -1,7 +1,8 @@
 // Every word on /case-study lives here. Facts come only from the assignment brief; anything the
 // brief did not supply is a visible "TODO:" string so it can't slip through as an invented fact.
 
-export type CaseId = "c1" | "c2";
+/** Accent scopes. c3a–c3c are the npm study's three parts: attack (red), response (amber), fix (green). */
+export type CaseId = "c1" | "c2" | "c3a" | "c3b" | "c3c";
 
 /** Reference ids — source tags on the page link to #ref-<id>. */
 export type RefId =
@@ -22,13 +23,18 @@ export type RefId =
   | "s2w"
   | "dexposelockbit"
   | "dexposeqilin"
-  | "arete";
+  | "arete"
+  | "vt166"
+  | "gridinsoft"
+  | "vulert";
 
 export type Step = {
   /** Short label for the step index (pattern B) and the steps' mono kicker. */
   kicker: string;
   /** Max 40 words. */
   body: string;
+  /** Visible status stamp for unverified statements, e.g. "To verify". */
+  flag?: string;
 };
 
 export type Meta = { category: string; date: string; source: string };
@@ -46,11 +52,16 @@ export type QuestionScene = {
   /** Plain-language description of the visual, used as alt text on both the 3D and SVG versions. */
   alt: string;
   refs: RefId[];
+  /** Evidence entries on the same page (#ev-<id>), shown as source tags beside the references. */
+  evidence?: string[];
+  /** Visible status stamp for the whole scene, e.g. "Unconfirmed — under investigation". */
+  flag?: string;
   /** One line that tees up the next question (pattern E). */
   next: string;
 };
 
-export type Stat = { value: number; prefix?: string; suffix?: string; label: string; note?: string };
+/** `text` replaces the counted number, for values that are not numbers yet (e.g. "TODO", "Weeks"). */
+export type Stat = { value: number; prefix?: string; suffix?: string; label: string; note?: string; text?: string };
 
 export type Card = { title: string; body: string; pill?: string };
 
@@ -66,6 +77,12 @@ export type Front = {
   deck: string;
   read: string;
   globeAlt: string;
+  /** Background object behind the masthead. Defaults to the globe. */
+  cover?: "globe" | "network";
+  /** Optional byline rows (label, value) under the lead story. */
+  byline?: { label: string; value: string }[];
+  /** Optional status line, e.g. for an investigation that is still open. */
+  status?: string;
 };
 
 export const shwapnoFront: Front = {
@@ -812,6 +829,8 @@ export type Closing = {
   todayTitle: string;
   today: string[];
   quote: string;
+  /** Optional two-column comparison shown under the head, e.g. "What we had" vs "What we needed". */
+  compare?: { had: { title: string; items: string[] }; needed: { title: string; items: string[] } };
 };
 
 export const shwapnoClosing: Closing = {
@@ -961,6 +980,26 @@ export const references: { id: RefId; outlet: string; title: string; href: strin
     title: "LockBit 5.0: The RaaS That Refuses to Go Away",
     href: "https://areteir.com/resources/lockbit-5-0-ransomware-threat-resurgence",
     date: "20 January 2026",
+  },
+  {
+    id: "vt166",
+    outlet: "VirusTotal",
+    title: "IP address report: 166.88.134.62",
+    href: "https://www.virustotal.com/gui/ip-address/166.88.134.62",
+  },
+  {
+    id: "gridinsoft",
+    outlet: "GridinSoft",
+    title: "Joyfill npm Packages Compromised: Six Malicious Versions",
+    href: "https://blog.gridinsoft.com/joyfill-npm-packages-compromised/",
+    date: "29 July 2026",
+  },
+  {
+    id: "vulert",
+    outlet: "Vulert",
+    title: "Compromised Joyfill npm Packages Run RAT When Imported Into Node.js",
+    href: "https://vulert.com/blog/joyfill-npm-packages-rat-supply-chain/",
+    date: "29 July 2026",
   },
 ];
 

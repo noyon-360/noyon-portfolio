@@ -2,7 +2,7 @@ import { references, type CaseId, type RefId } from "../content";
 import RefFlash from "../patterns/RefFlash";
 
 /** The study's numbered references. Source tags across the page jump to #ref-<id>, and that row blinks. */
-export default function References({ ids, caseId }: { ids: RefId[]; caseId: CaseId }) {
+export default function References({ ids, caseId, note }: { ids: RefId[]; caseId: CaseId; note?: string }) {
   const list = ids.map((id) => references.find((r) => r.id === id)).filter((r) => r !== undefined);
   return (
     <section id="references" data-case={caseId} aria-labelledby="references-h" className="border-t border-rule px-4 py-24 sm:px-8 lg:pr-24">
@@ -26,6 +26,7 @@ export default function References({ ids, caseId }: { ids: RefId[]; caseId: Case
             </li>
           ))}
         </ol>
+        {note && <p className="mt-6 max-w-2xl border-l border-amber pl-4 text-sm text-dim">{note}</p>}
         <p className="mt-10 max-w-2xl text-sm text-dim">
           Educational case study. No exploit code, malware samples or technical attack detail is included. All visuals are made in code; no logos or photographs are used.
         </p>

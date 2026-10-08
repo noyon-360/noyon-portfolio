@@ -65,3 +65,11 @@ export function serifFamily() {
 
 export const FONT_MONO = 'ui-monospace, "SF Mono", Menlo, monospace';
 export const FONT_SANS = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif';
+
+/** Outline of a box as line segments (the temporary box geometry is released straight away). */
+export function boxEdges(w: number, h: number, d: number) {
+  const box = new THREE.BoxGeometry(w, h, d);
+  const edges = new THREE.EdgesGeometry(box);
+  box.dispose();
+  return edges;
+}

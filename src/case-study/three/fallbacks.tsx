@@ -1,13 +1,16 @@
 // Static SVG versions of every 3D object, shown on phones, under reduced motion, before 3D loads,
 // and to anyone without WebGL. Each one shows the object's end state. Decorative: the Stage carries alt text.
 import { c1Checklist, c1Shield, c2Pins, visualText } from "../content";
+import { npmShieldLayers, npmVisual } from "../studies/npm-supply-chain-attack";
 import { BD_CENTER, BD_OUTLINE, illustrativeDots } from "./bangladesh";
+import { NET_BAD, NET_EDGES, NET_NODES, SERVER_CELLS, SWITCH_COUNT, SWITCH_SUSPECT, TOWER_BLOCKS, TOWER_WORST, TREE, TREE_PATH } from "./npm";
 import { rng } from "./util";
 
 const A = "var(--color-amber)";
 const R = "var(--color-signal)";
 const I = "var(--color-ivory)";
 const D = "var(--color-dim)";
+const G = "var(--color-green)";
 const L = "var(--color-rule)";
 // Trig results can differ in the last digit between server and browser; round to keep hydration stable.
 const r2 = (v: number) => Math.round(v * 100) / 100;
@@ -372,6 +375,402 @@ export function PcsSvg() {
       <text x={20} y={268} fontSize={8} fill={R} style={mono}>
         {wave.toUpperCase()} →
       </text>
+    </Svg>
+  );
+}
+
+// ── npm supply-chain study ──────────────────────────────────────────────────
+
+export function NetworkSvg() {
+  // Flat projection of the 3D layout: x, y with a little depth shift.
+  const pt = ([x, y, z]: [number, number, number]) => [r2(200 + x * 24 + z * 6), r2(150 - y * 24 - z * 4)];
+  return (
+    <Svg>
+      {NET_EDGES.map(([a, b]) => {
+        const [x1, y1] = pt(NET_NODES[a]);
+        const [x2, y2] = pt(NET_NODES[b]);
+        return <line key={`${a}-${b}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={I} strokeOpacity={0.22} />;
+      })}
+      {NET_NODES.map((n, i) => {
+        const [x, y] = pt(n);
+        return <rect key={i} x={x - 5} y={y - 5} width={10} height={10} stroke={i === NET_BAD ? R : I} strokeOpacity={i === NET_BAD ? 1 : 0.45} />;
+      })}
+    </Svg>
+  );
+}
+
+export function ServerCalendarSvg() {
+  const { servers, calendar } = npmVisual;
+  const cw = 300 / 7;
+  const ch = 190 / 4;
+  return (
+    <Svg>
+      <rect x={40} y={30} width={320} height={250} fill="#121212" stroke={L} />
+      <text x={56} y={58} fontSize={18} fill={I} style={serif}>
+        {calendar.title}
+      </text>
+      <text x={344} y={58} fontSize={7} fill={A} textAnchor="end" style={mono}>
+        {calendar.note.toUpperCase()}
+      </text>
+      {Array.from({ length: 28 }, (_, k) => (
+        <rect key={k} x={r2(50 + (k % 7) * cw)} y={r2(78 + Math.floor(k / 7) * ch)} width={r2(cw - 4)} height={r2(ch - 4)} stroke={I} strokeOpacity={0.14} />
+      ))}
+      {SERVER_CELLS.map(([c, r], i) => (
+        <g key={i} transform={`translate(${r2(50 + c * cw + cw / 2 - 9)},${r2(78 + r * ch + 6)})`}>
+          <rect width={18} height={26} fill="#1a1a1a" stroke={R} />
+          <rect x={3} y={5} width={12} height={3} fill={R} />
+          <text x={9} y={38} fontSize={7} fill={I} textAnchor="middle" style={mono}>
+            {servers[i].replace("Server ", "")}
+          </text>
+        </g>
+      ))}
+    </Svg>
+  );
+}
+
+export function TowersSvg() {
+  const { towers } = npmVisual;
+  return (
+    <Svg>
+      {TOWER_BLOCKS.map((n, t) => {
+        const x = 50 + t * 82;
+        const worst = t === TOWER_WORST;
+        return (
+          <g key={t}>
+            <rect x={x} y={40} width={60} height={210} stroke={worst ? R : I} strokeOpacity={worst ? 1 : 0.35} />
+            {Array.from({ length: n }, (_, j) => (
+              <rect
+                key={j}
+                x={x + 7}
+                y={238 - j * 19}
+                width={46}
+                height={14}
+                fill={worst ? (j === 6 ? R : I) : D}
+                fillOpacity={worst ? 0.9 : 0.18}
+              />
+            ))}
+            <text x={x + 30} y={270} fontSize={7} fill={worst ? R : D} textAnchor="middle" style={mono}>
+              {(worst ? towers.worst : towers.other).toUpperCase()}
+            </text>
+          </g>
+        );
+      })}
+    </Svg>
+  );
+}
+
+export function TreeSvg() {
+  const pt = (i: number) => [r2(200 + TREE[i].x * 52), r2(150 - TREE[i].y * 60)];
+  const onPath = (a: number, b: number) => {
+    const k = TREE_PATH.indexOf(a);
+    return k >= 0 && TREE_PATH[k + 1] === b;
+  };
+  return (
+    <Svg>
+      {TREE.map((n, i) => {
+        if (n.parent < 0) return null;
+        const [x1, y1] = pt(i);
+        const [x2, y2] = pt(n.parent);
+        const red = onPath(i, n.parent);
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={red ? R : D} strokeOpacity={red ? 1 : 0.45} />;
+      })}
+      {TREE.map((_, i) => {
+        const [x, y] = pt(i);
+        const red = TREE_PATH.includes(i);
+        const w = i === 0 ? 56 : 32;
+        return <rect key={i} x={x - w / 2} y={y - 9} width={w} height={18} fill={red ? R : "#3a3835"} />;
+      })}
+      <text x={pt(0)[0]} y={pt(0)[1] - 16} fontSize={8} fill={I} textAnchor="middle" style={mono}>
+        {npmVisual.tree.root.toUpperCase()}
+      </text>
+      <text x={pt(TREE_PATH[0])[0]} y={pt(TREE_PATH[0])[1] + 24} fontSize={8} fill={R} textAnchor="middle" style={mono}>
+        {npmVisual.tree.bad.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function NodeBoxSvg() {
+  const { label, markers } = npmVisual.nodeBox;
+  return (
+    <Svg>
+      <rect x={110} y={50} width={180} height={140} fill="#9fb4c8" fillOpacity={0.06} stroke={I} strokeOpacity={0.6} />
+      <text x={124} y={72} fontSize={14} fill={I} style={mono}>
+        {label}
+      </text>
+      <rect x={176} y={96} width={48} height={48} fill={R} />
+      {/* Scrambled band: blurred placeholder bars, never real text. */}
+      <g className="cs-scramble">
+        {Array.from({ length: 22 }, (_, k) => (
+          <rect key={k} x={40 + k * 15} y={222} width={10} height={8} fill={I} fillOpacity={0.4} />
+        ))}
+      </g>
+      {markers.map((m, i) => (
+        <g key={m} transform={`translate(${56 + i * 112},216)`}>
+          <rect width={m.length * 6.4 + 12} height={20} fill={R} />
+          <text x={6} y={14} fontSize={10} fill="#0a0a0a" style={mono}>
+            {m}
+          </text>
+        </g>
+      ))}
+    </Svg>
+  );
+}
+
+export function BeaconsSvg() {
+  const b = [
+    [110, 70],
+    [300, 100],
+  ];
+  return (
+    <Svg>
+      {b.map(([x, y], i) => (
+        <g key={i}>
+          <path d={`M200,270 Q${(200 + x) / 2},${y - 20} ${x},${y}`} stroke={R} strokeDasharray="5 4" />
+          <circle cx={x} cy={y} r={14} fill={R} fillOpacity={0.18} />
+          <circle cx={x} cy={y} r={6} fill={R} />
+          <text x={x} y={y - 22} fontSize={9} fill={I} textAnchor="middle" style={mono}>
+            {npmVisual.beacons[i]}
+          </text>
+        </g>
+      ))}
+      <rect x={186} y={264} width={28} height={16} fill="#1a1a1a" stroke={R} />
+    </Svg>
+  );
+}
+
+function cursorPath(x: number, y: number, s = 1) {
+  const p = [
+    [0, 0],
+    [0, 42],
+    [10, 32],
+    [18, 50],
+    [24, 47],
+    [16, 30],
+    [30, 30],
+  ];
+  return p.map(([a, b], i) => `${i ? "L" : "M"}${x + a * s},${y + b * s}`).join(" ") + "Z";
+}
+
+export function CursorSvg() {
+  return (
+    <Svg>
+      <rect x={60} y={40} width={280} height={180} fill="#101214" stroke="#2a2a2a" strokeWidth={8} />
+      <rect x={80} y={60} width={140} height={90} fill="#1b1e21" />
+      <rect x={180} y={110} width={140} height={90} fill="#1b1e21" />
+      <rect x={185} y={225} width={30} height={30} fill="#1a1a1a" />
+      <path d={cursorPath(130, 120, 0.6)} fill={I} />
+      <path d={cursorPath(250, 80, 0.6)} fill={R} />
+      <text x={130} y={162} fontSize={7} fill={D} style={mono}>
+        {npmVisual.cursor.owner.toUpperCase()}
+      </text>
+      <text x={250} y={122} fontSize={7} fill={R} style={mono}>
+        {npmVisual.cursor.stranger.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function GaugesSvg() {
+  const arc = (cx: number, level: number) => {
+    const a0 = Math.PI * 1.375;
+    const a1 = a0 - Math.PI * 1.25 * level;
+    const r = 60;
+    const p = (a: number) => `${r2(cx + r * Math.cos(a))},${r2(190 - r * Math.sin(a))}`;
+    return `M${p(a0)} A${r},${r} 0 ${level > 0.8 ? 1 : 0} 1 ${p(a1)}`;
+  };
+  return (
+    <Svg>
+      <defs>
+        <linearGradient id="npm-heat" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stopColor={R} stopOpacity={0.35} />
+          <stop offset="1" stopColor={A} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <rect x={40} y={30} width={320} height={110} fill="url(#npm-heat)" />
+      {[120, 280].map((cx, i) => (
+        <g key={cx}>
+          <path d={arc(cx, 1)} stroke="#222" strokeWidth={10} />
+          <path d={arc(cx, i ? 0.93 : 0.97)} stroke={R} strokeWidth={10} />
+          <text x={cx} y={200} fontSize={9} fill={I} textAnchor="middle" style={mono}>
+            {npmVisual.gauges[i].toUpperCase()}
+          </text>
+        </g>
+      ))}
+    </Svg>
+  );
+}
+
+export function RowsSvg() {
+  const widths = [150, 110, 190, 90, 160, 120, 260, 140, 100, 170, 130];
+  return (
+    <Svg>
+      {widths.map((w, i) => (
+        <g key={i} transform={`translate(50,${30 + i * 22})`}>
+          <rect width={20} height={8} fill={D} />
+          <rect x={30} width={w} height={8} fill={i === 6 ? R : "#cfcac2"} fillOpacity={i === 6 ? 1 : 0.55} />
+          <rect x={290} width={18} height={8} fill={D} fillOpacity={0.6} />
+        </g>
+      ))}
+    </Svg>
+  );
+}
+
+export function ChecklistSvg() {
+  return (
+    <Svg>
+      <rect x={40} y={50} width={70} height={200} fill="#161616" />
+      {Array.from({ length: 6 }, (_, i) => (
+        <rect key={i} x={50} y={65 + i * 28} width={50} height={5} fill={A} fillOpacity={0.5} />
+      ))}
+      {npmVisual.checklist.map((label, i) => (
+        <g key={label} transform={`translate(140,${70 + i * 40})`}>
+          <rect width={18} height={18} stroke={I} strokeOpacity={0.5} />
+          <path d="M3,9 L8,14 L16,3" stroke={A} strokeWidth={2.5} />
+          <text x={30} y={13} fontSize={12} fill={I}>
+            {label}
+          </text>
+        </g>
+      ))}
+    </Svg>
+  );
+}
+
+export function WallSvg() {
+  return (
+    <Svg>
+      <rect x={40} y={110} width={50} height={120} fill="#161616" />
+      {Array.from({ length: 7 }, (_, r) => (
+        <g key={r}>
+          {Array.from({ length: 2 }, (_, c) => (
+            <rect key={c} x={290 + (r % 2 ? 12 : 0) + c * 32} y={40 + r * 32} width={28} height={28} fill="#2a2722" />
+          ))}
+        </g>
+      ))}
+      {[70, 110, 150, 190, 230].map((y, k) => (
+        <g key={y}>
+          <path d={`M80,110 Q${180},${20 + k * 8} 285,${y}`} stroke={R} strokeOpacity={0.6} />
+          <circle cx={285} cy={y} r={5} fill={R} />
+        </g>
+      ))}
+      <text x={300} y={282} fontSize={8} fill={D} style={mono}>
+        {npmVisual.wall.wall.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function SwitchesSvg() {
+  const { after, label } = npmVisual.switches;
+  return (
+    <Svg>
+      {Array.from({ length: SWITCH_COUNT }, (_, i) => {
+        const x = 30 + i * 28;
+        const off = i === SWITCH_SUSPECT;
+        return (
+          <g key={i}>
+            <rect x={x} y={130} width={20} height={40} fill="#1b1b1b" />
+            <rect x={x + 7} y={off ? 150 : 132} width={6} height={18} fill={I} />
+            <circle cx={x + 10} cy={120} r={3} fill={off ? "#333" : A} />
+          </g>
+        );
+      })}
+      <rect x={330} y={60} width={24} height={180} fill="#222" />
+      <rect x={334} y={r2(240 - 180 * (after / 100))} width={16} height={r2(180 * (after / 100))} fill={A} />
+      <text x={342} y={52} fontSize={14} fill={A} textAnchor="middle" style={serif}>
+        {after}%
+      </text>
+      <text x={342} y={258} fontSize={7} fill={D} textAnchor="middle" style={mono}>
+        {label.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function MagnifierSvg() {
+  const { ports, blind } = npmVisual.magnifier;
+  const x = (i: number) => 40 + i * 68;
+  const b = ports.indexOf("443");
+  return (
+    <Svg>
+      {ports.map((p, i) => (
+        <g key={p}>
+          <rect x={x(i)} y={130} width={56} height={36} fill="#151515" stroke={I} strokeOpacity={0.35} />
+          <text x={x(i) + 28} y={153} fontSize={12} fill={I} textAnchor="middle" style={mono}>
+            :{p}
+          </text>
+        </g>
+      ))}
+      <circle cx={x(b) + 28} cy={148} r={44} stroke={I} strokeWidth={6} />
+      <circle cx={x(b) + 28} cy={148} r={28} fill="#050505" fillOpacity={0.94} />
+      <line x1={x(b) + 60} y1={180} x2={x(b) + 92} y2={212} stroke="#2a2a2a" strokeWidth={10} />
+      <text x={x(b) + 28} y={110} fontSize={8} fill={A} textAnchor="middle" style={mono}>
+        {blind.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function DoorsSvg() {
+  return (
+    <Svg>
+      <rect x={230} y={70} width={70} height={130} fill={A} fillOpacity={0.05} stroke={D} strokeOpacity={0.4} strokeWidth={4} />
+      <text x={265} y={62} fontSize={8} fill={A} textAnchor="middle" style={mono}>
+        {npmVisual.doors.back.toUpperCase()}
+      </text>
+      <rect x={90} y={50} width={110} height={210} fill={A} fillOpacity={0.18} stroke={I} strokeWidth={8} />
+      <text x={145} y={278} fontSize={8} fill={I} textAnchor="middle" style={mono}>
+        {npmVisual.doors.front.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function KeysSvg() {
+  return (
+    <Svg>
+      <circle cx={200} cy={60} r={30} stroke={D} strokeWidth={4} />
+      {npmVisual.keys.map((k, i) => {
+        const a = (i - 1.5) * 18;
+        return (
+          <g key={k} transform={`rotate(${a} 200 90)`}>
+            <circle cx={200} cy={110} r={12} stroke={A} strokeWidth={5} />
+            <rect x={197} y={122} width={6} height={80} fill={A} />
+            <rect x={203} y={186} width={10} height={6} fill={A} />
+            <rect x={203} y={196} width={7} height={6} fill={A} />
+          </g>
+        );
+      })}
+      {npmVisual.keys.map((k, i) => (
+        <text key={k} x={50 + i * 100} y={280} fontSize={8} fill={I} textAnchor="middle" style={mono}>
+          {k.toUpperCase()}
+        </text>
+      ))}
+    </Svg>
+  );
+}
+
+export function GuardShieldSvg() {
+  return (
+    <Svg>
+      {npmShieldLayers.map((label, i) => {
+        const s = 1 - i * 0.17;
+        return (
+          <path
+            key={label}
+            d={`M${120 - 75 * s},${150 - 85 * s} L${120 + 75 * s},${150 - 85 * s} L${120 + 75 * s},${150 - 10 * s} Q${120 + 70 * s},${150 + 65 * s} 120,${150 + 105 * s} Q${120 - 70 * s},${150 + 65 * s} ${120 - 75 * s},${150 - 10 * s} Z`}
+            fill={G}
+            fillOpacity={0.12 + i * 0.16}
+            stroke={G}
+            strokeOpacity={0.7}
+          />
+        );
+      })}
+      {npmShieldLayers.map((label, i) => (
+        <text key={label} x={226} y={100 + i * 30} fontSize={11} fill={I} style={mono}>
+          {String(i + 1).padStart(2, "0")} {label}
+        </text>
+      ))}
     </Svg>
   );
 }

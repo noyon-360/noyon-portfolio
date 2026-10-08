@@ -12,7 +12,7 @@ export function CountUp({ stat }: { stat: Stat }) {
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el || stat.text || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const box = { v: 0 };
     let tween: gsap.core.Tween | undefined;
     // The server-rendered text is the final value; only zero it once we know we can animate it.
@@ -29,7 +29,9 @@ export function CountUp({ stat }: { stat: Stat }) {
       st.kill();
       tween?.kill();
     };
-  }, [stat.value]);
+  }, [stat.value, stat.text]);
+
+  if (stat.text) return <span>{stat.text}</span>;
 
   return (
     <>
