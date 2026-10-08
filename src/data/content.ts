@@ -3,8 +3,8 @@ import type { CraftArtId } from "@/components/CraftArt";
 export const profile = {
   name: "Nazibullah Noyon",
   shortName: "Noyon",
-  title: "Software Engineer",
-  roles: ["Mobile, Web & Backend"],
+  title: "Cyber Security Researcher & Software Engineer",
+  roles: ["Security research", "Mobile, Web & Backend"],
   location: "Gazipur, Bangladesh",
   timezone: "UTC +06:00",
   // IANA zone for the live clock in the hero.
@@ -12,7 +12,7 @@ export const profile = {
   email: "nazibullahnoyon19.20@gmail.com",
   phone: "+8801305223046",
   summary:
-    "Software engineer with 35+ cross-platform apps shipped to Google Play and the App Store, working full-stack across the Flutter client and NestJS/Firebase backends. Comfortable owning a feature from architecture to release — Clean Architecture, state management, media streaming, payments, and CI/CD.",
+    "Cyber security researcher: finding system vulnerabilities, analysing malware, studying zero-day exploits and designing defences, including adversarial machine-learning models. Working in Kali Linux with Burp Suite, Nmap, Metasploit, MobSF and Python. Behind that, a software engineer with 35+ cross-platform apps shipped to Google Play and the App Store, full-stack across Flutter and NestJS/Firebase — so I know how the systems I attack are built.",
   // Drop the PDF into /public with this name to enable the download button.
   cv: "/Nazibullah_Noyon_CV.pdf",
   // Square headshot shown beside the name in the navbar; initials show until the file exists.
@@ -24,16 +24,18 @@ export const profile = {
 // toolkit as tags. `accents` fill in a colour instead of the text colour.
 export const intro = {
   lines: [
+    "Cyber security researcher: vulnerabilities, malware, zero-days and ML-based defences.",
     "Software engineer with 35+ cross-platform apps shipped to Google Play and the App Store.",
     "Full-stack across the Flutter client and the NestJS/Firebase backend behind it.",
     "I own features end to end, from architecture to release.",
   ],
   accents: [
+    { text: "Cyber security researcher", className: "font-semibold text-server" },
     { text: "35+ cross-platform apps", className: "font-semibold text-text" },
     { text: "Flutter client", className: "text-client" },
     { text: "NestJS/Firebase backend", className: "text-server" },
   ],
-  toolkit: ["Clean Architecture", "State management", "Media streaming", "Payments", "CI/CD"],
+  toolkit: ["Kali Linux", "Burp Suite", "Nmap", "Metasploit", "MobSF", "Clean Architecture", "State management", "Media streaming", "Payments", "CI/CD"],
 };
 
 export const stats = [
@@ -217,6 +219,21 @@ const tourEntries: TourEntry[] = [
     tools: ["Python", "scikit-learn", "XGBoost", "Scapy", "pandas"],
   },
   {
+    id: "security",
+    label: "Security research",
+    title: "Breaking things to defend them",
+    accent: "server",
+    summary:
+      "I research cyber security: finding vulnerabilities, studying malware and zero-day exploits, and designing defences, including adversarial machine-learning models.",
+    proof: [
+      "Recon and exploitation on Kali Linux with Nmap and Metasploit (msfconsole)",
+      "Web testing through Burp Suite on OWASP Juice Shop and PortSwigger Web Security Academy labs",
+      "Mobile app analysis with MobSF, plus Python for custom tooling and the ML intrusion detector from my thesis",
+    ],
+    metric: { value: "6", label: "tools in the daily kit" },
+    tools: ["Kali Linux", "Burp Suite", "Nmap", "Metasploit", "MobSF", "Python", "OWASP Juice Shop", "PortSwigger Labs"],
+  },
+  {
     id: "streaming",
     label: "BeatX",
     tag: "Client project · Streaming backend",
@@ -301,8 +318,8 @@ const pick = (ids: string[]) =>
     return entry;
   });
 
-export const skillTour = pick(["flutter", "architecture", "backend", "firebase", "release", "design", "team"]);
-export const projectTour = pick(["streaming", "exodus", "azlotv", "offline-geo", "couplio", "cosmoquest", "hardware", "ml-security"]);
+export const skillTour = pick(["security", "flutter", "architecture", "backend", "firebase", "release", "design", "team"]);
+export const projectTour = pick(["ml-security", "streaming", "exodus", "azlotv", "offline-geo", "couplio", "cosmoquest", "hardware"]);
 
 
 export const projects = [
@@ -472,6 +489,10 @@ export const education = {
 };
 
 export const skills = [
+  {
+    group: "Cyber Security",
+    items: ["Kali Linux", "Burp Suite", "Nmap", "Metasploit (msfconsole)", "MobSF", "Python", "OWASP Juice Shop", "PortSwigger Labs", "Vulnerability research", "Malware analysis", "Adversarial ML"],
+  },
   { group: "Languages", items: ["Dart", "TypeScript", "JavaScript", "SQL"] },
   {
     group: "Flutter & Architecture",
@@ -571,6 +592,7 @@ export const craft: CraftTrack[] = [
 ];
 
 export const faqs = [
+  { q: "Do you do security work?", a: "Yes, it's my main focus. I test web and mobile apps with Kali Linux, Burp Suite, Nmap, Metasploit and MobSF, practise on OWASP Juice Shop and PortSwigger labs, and study malware, zero-days and adversarial ML defences. It also shapes how I build: auth, token handling and secure storage in my own apps." },
   { q: "What do you build?", a: "Cross-platform Flutter apps and the NestJS or Firebase backends behind them — auth, payments, media streaming, real-time features and the CI/CD that ships them." },
   { q: "Can you own a product end-to-end?", a: "Yes. BeatX's backend and SmilesTreats were built end-to-end, from architecture to store release, with payments and OTA updates in place." },
   { q: "Do you work with existing codebases and teams?", a: "Daily. I lead a 14-person team, review code and set architecture standards, and I'm comfortable plugging into an established codebase and process." },

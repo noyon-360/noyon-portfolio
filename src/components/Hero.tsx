@@ -11,9 +11,9 @@ const timeline = [0, 380, 760, 1250, 2350];
 
 // Each headline line is one beat; the accent word gets its colour and a drawn underline.
 const lines: { words: string[]; accent?: { word: string; className: string } }[] = [
-  { words: ["I", "build", "the", "app"], accent: { word: "app", className: "text-client" } },
-  { words: ["and", "the", "server"], accent: { word: "server", className: "text-server" } },
-  { words: ["behind", "it."] },
+  { words: ["I", "break", "systems"], accent: { word: "break", className: "text-server" } },
+  { words: ["to", "secure", "them,"] },
+  { words: ["and", "build", "the", "apps."], accent: { word: "apps.", className: "text-client" } },
 ];
 
 export default function Hero() {

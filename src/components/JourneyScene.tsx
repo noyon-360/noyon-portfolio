@@ -1651,6 +1651,105 @@ function TeamStation({ index, cursorRef, reduced, active }: StationProps) {
   );
 }
 
+/* 15 — Security research: Kali box → Burp proxy → target, with Nmap lighting up open ports. */
+const PEN_PROBES = 10;
+const PEN_PORTS = 8;
+const OPEN_PORTS = new Set([1, 4, 6]);
+
+function PentestStation({ index, cursorRef, reduced, active }: StationProps) {
+  const { RED, AMBER } = useContext(Palette);
+  const probes = useRef<(THREE.Mesh | null)[]>([]);
+  const ports = useRef<(THREE.MeshStandardMaterial | null)[]>([]);
+  const ring = useRef<THREE.Group>(null);
+  const v = useMemo(
+    () => ({
+      white: new THREE.Color("#e9edf3"),
+      amber: new THREE.Color(AMBER),
+      red: new THREE.Color(RED),
+      dim: new THREE.Color("#2b3546"),
+      kali: new THREE.Vector3(-2.4, 0, 0),
+      proxy: new THREE.Vector3(-0.2, 0, 0),
+      target: new THREE.Vector3(2.2, 0, 0),
+    }),
+    [RED, AMBER],
+  );
+
+  useFrame(({ clock }) => {
+    const t = reduced ? 0.5 : clock.elapsedTime;
+    const f = focusOf(cursorRef.current, index);
+    probes.current.forEach((m, k) => {
+      if (!m) return;
+      const u = (t * 0.18 + k / PEN_PROBES) % 1;
+      // Kali → proxy, held at the proxy (intercepted), then on to the target.
+      if (u < 0.4) m.position.lerpVectors(v.kali, v.proxy, u / 0.4);
+      else if (u < 0.55) m.position.copy(v.proxy);
+      else m.position.lerpVectors(v.proxy, v.target, (u - 0.55) / 0.45);
+      m.position.y += Math.sin(u * Math.PI * 2 + k) * 0.08;
+      (m.material as THREE.MeshBasicMaterial).color.copy(u < 0.4 ? v.white : v.amber);
+      m.visible = f > 0.05;
+    });
+    // The scan walks the ports; open ones stay lit until the sweep comes round again.
+    const sweep = (t * 1.6) % PEN_PORTS;
+    ports.current.forEach((mat, k) => {
+      if (!mat) return;
+      const scanned = k <= sweep;
+      const hit = Math.abs(sweep - k) < 0.5;
+      mat.color.copy(scanned && OPEN_PORTS.has(k) ? v.red : hit ? v.white : v.dim);
+      mat.emissiveIntensity = scanned && OPEN_PORTS.has(k) ? 0.9 * (0.3 + 0.7 * f) : hit ? 0.6 : 0;
+    });
+    if (ring.current) ring.current.rotation.x = t * 0.25;
+  });
+
+  return (
+    <group position={[-0.2, 0, 0]} rotation={[0.12, -0.2, 0]} scale={0.9}>
+      <mesh position={v.kali}>
+        <boxGeometry args={[1, 0.7, 0.08]} />
+        <meshStandardMaterial color="#0d1118" />
+        <Edges color={RED} />
+      </mesh>
+      {[0.18, 0.04, -0.1].map((y, k) => (
+        <mesh key={y} position={[-2.7 + k * 0.08, y, 0.05]}>
+          <boxGeometry args={[0.32 + k * 0.12, 0.04, 0.01]} />
+          <meshBasicMaterial color={k ? "#e9edf3" : RED} transparent opacity={0.85} />
+        </mesh>
+      ))}
+      <Line points={[v.kali.toArray(), v.target.toArray()]} color="#2b3546" lineWidth={1} />
+      <mesh position={v.proxy} rotation={[0, Math.PI / 2, 0]}>
+        <torusGeometry args={[0.38, 0.04, 8, 40]} />
+        <meshStandardMaterial color={AMBER} emissive={AMBER} emissiveIntensity={0.5} />
+      </mesh>
+      <group position={v.target}>
+        <mesh>
+          <boxGeometry args={[0.6, 0.9, 0.6]} />
+          <meshStandardMaterial color="#121722" transparent opacity={0.7} />
+          <Edges color="#8d97a8" />
+        </mesh>
+        <group ref={ring}>
+          {Array.from({ length: PEN_PORTS }, (_, k) => {
+            const a = (k / PEN_PORTS) * Math.PI * 2;
+            return (
+              <mesh key={k} position={[0, Math.sin(a) * 0.8, Math.cos(a) * 0.8]}>
+                <sphereGeometry args={[0.07, 10, 10]} />
+                <meshStandardMaterial ref={(m) => { ports.current[k] = m; }} color="#2b3546" emissive={RED} emissiveIntensity={0} />
+              </mesh>
+            );
+          })}
+        </group>
+      </group>
+      {Array.from({ length: PEN_PROBES }, (_, k) => (
+        <mesh key={k} ref={(m) => { probes.current[k] = m; }}>
+          <sphereGeometry args={[0.05, 10, 10]} />
+          <meshBasicMaterial color="#e9edf3" />
+        </mesh>
+      ))}
+      <Label show={active} position={[-2.4, 0.7, 0]}>Kali · msfconsole</Label>
+      <Label show={active} position={[-0.2, 0.75, 0]}>Burp intercept</Label>
+      <Label show={active} position={[2.2, 1.2, 0]}>Nmap · open ports</Label>
+      <Label show={active} position={[2.2, -1.2, 0]}>Juice Shop · PortSwigger labs</Label>
+    </group>
+  );
+}
+
 // 3D scene for each tour entry, keyed by its id in content.ts.
 const STATION_REGISTRY: Record<string, (props: StationProps) => React.JSX.Element> = {
   flutter: PhoneStation,
@@ -1668,6 +1767,7 @@ const STATION_REGISTRY: Record<string, (props: StationProps) => React.JSX.Elemen
   cosmoquest: CosmoStation,
   hardware: HardwareStation,
   "ml-security": SecurityStation,
+  security: PentestStation,
 };
 
 export default function JourneyScene({
