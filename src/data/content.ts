@@ -1,5 +1,8 @@
 import type { CraftArtId } from "@/components/CraftArt";
 
+// Public-folder URLs need the GitHub Pages sub-path (basePath) prepended.
+const asset = (path: string) => `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}${path}`;
+
 export const profile = {
   name: "Nazibullah Noyon",
   shortName: "Noyon",
@@ -14,9 +17,9 @@ export const profile = {
   summary:
     "Cyber security researcher: finding system vulnerabilities, analysing malware, studying zero-day exploits and designing defences, including adversarial machine-learning models. Working in Kali Linux with Burp Suite, Nmap, Metasploit, MobSF and Python. Behind that, a software engineer with 35+ cross-platform apps shipped to Google Play and the App Store, full-stack across Flutter and NestJS/Firebase — so I know how the systems I attack are built.",
   // Drop the PDF into /public with this name to enable the download button.
-  cv: "/Nazibullah_Noyon_CV.pdf",
+  cv: asset("/Nazibullah_Noyon_CV.pdf"),
   // Square headshot shown beside the name in the navbar; initials show until the file exists.
-  photo: "/avatar.jpg",
+  photo: asset("/avatar.jpg"),
   socials: [{ label: "GitHub", href: "https://github.com/noyon-360" }],
 };
 
@@ -563,8 +566,8 @@ export const craft: CraftTrack[] = [
     tools: ["Pencil & grid", "Acrylic on canvas", "Thuluth-style lettering"],
     steps: [
       { art: "calligraphy-grid", caption: "Construction grid: rings, radials, nuqta scale" },
-      { src: "/craft/calligraphy-ikhlas.jpg", w: 1054, h: 1400, caption: "Surah Al-Ikhlas — on canvas" },
-      { src: "/craft/calligraphy-hasbunallah.jpg", w: 1400, h: 1057, caption: "Al-Imran 3:173 — on canvas" },
+      { src: asset("/craft/calligraphy-ikhlas.jpg"), w: 1054, h: 1400, caption: "Surah Al-Ikhlas — on canvas" },
+      { src: asset("/craft/calligraphy-hasbunallah.jpg"), w: 1400, h: 1057, caption: "Al-Imran 3:173 — on canvas" },
     ],
   },
   {
@@ -576,17 +579,17 @@ export const craft: CraftTrack[] = [
     tools: ["Photoshop", "Illustrator", "InDesign", "XD"],
     columns: 2,
     compare: {
-      base: { src: "/craft/design-space-poster.jpg", w: 595, h: 842 },
-      overlay: { src: "/craft/design-space-poster-grid.jpg", w: 595, h: 842 },
+      base: { src: asset("/craft/design-space-poster.jpg"), w: 595, h: 842 },
+      overlay: { src: asset("/craft/design-space-poster-grid.jpg"), w: 595, h: 842 },
       caption: "“Innovation” poster, 2021 — toggle the golden-ratio grid it was built on",
     },
     steps: [
-      { src: "/craft/design-lockdown-illustration.jpg", w: 1400, h: 787, caption: "Lockdown — editorial illustration" },
-      { src: "/craft/design-night-bridge.jpg", w: 1400, h: 1050, caption: "Night bridge — digital painting" },
-      { src: "/craft/design-grammar-pearls-cover.jpg", w: 1400, h: 845, caption: "Grammar Pearls — full book-cover wrap" },
-      { src: "/craft/design-prodigy-logo.jpg", w: 1400, h: 1400, caption: "Prodigy Education — logo" },
-      { src: "/craft/design-basoa-logo.jpg", w: 1400, h: 1400, caption: "BASOA — Arabic wordmark" },
-      { src: "/craft/design-goodboy-app.jpg", w: 1365, h: 911, caption: "GoodBoy — app brand & splash" },
+      { src: asset("/craft/design-lockdown-illustration.jpg"), w: 1400, h: 787, caption: "Lockdown — editorial illustration" },
+      { src: asset("/craft/design-night-bridge.jpg"), w: 1400, h: 1050, caption: "Night bridge — digital painting" },
+      { src: asset("/craft/design-grammar-pearls-cover.jpg"), w: 1400, h: 845, caption: "Grammar Pearls — full book-cover wrap" },
+      { src: asset("/craft/design-prodigy-logo.jpg"), w: 1400, h: 1400, caption: "Prodigy Education — logo" },
+      { src: asset("/craft/design-basoa-logo.jpg"), w: 1400, h: 1400, caption: "BASOA — Arabic wordmark" },
+      { src: asset("/craft/design-goodboy-app.jpg"), w: 1365, h: 911, caption: "GoodBoy — app brand & splash" },
     ],
   },
 ];

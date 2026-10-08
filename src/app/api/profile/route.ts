@@ -1,3 +1,5 @@
+export const dynamic = "force-static";
+
 import { profile, stats } from "@/data/content";
 
 export function GET() {

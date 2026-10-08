@@ -10,6 +10,8 @@ const endpoints = [
   { path: "/api/health", note: "Service health check" },
 ];
 
+const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export default function ApiDemo() {
   const [path, setPath] = useState(endpoints[0].path);
   const [out, setOut] = useState("");
@@ -21,7 +23,7 @@ export default function ApiDemo() {
     setLoading(true);
     const start = performance.now();
     try {
-      const res = await fetch(path);
+      const res = await fetch(base + path);
       const body = await res.json();
       setMeta(`${res.status} ${res.ok ? "OK" : "Error"} · ${Math.round(performance.now() - start)} ms`);
       setOut(JSON.stringify(body, null, 2));
@@ -34,7 +36,7 @@ export default function ApiDemo() {
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(`curl ${window.location.origin}${path}`);
+      await navigator.clipboard.writeText(`curl ${window.location.origin}${base}${path}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {}

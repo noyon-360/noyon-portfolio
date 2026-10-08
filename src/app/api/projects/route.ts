@@ -1,3 +1,5 @@
+export const dynamic = "force-static";
+
 import { projects } from "@/data/content";
 
 export function GET() {

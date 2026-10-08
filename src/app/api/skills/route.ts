@@ -1,3 +1,5 @@
+export const dynamic = "force-static";
+
 import { skillTour, skills } from "@/data/content";
 
 export function GET() {
