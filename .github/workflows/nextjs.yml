@@ -57,7 +57,7 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
         # No static_site_generator: it would write its own next.config.js, which
-        # shadows next.config.ts (and its Tailwind loader). basePath is passed below.
+        # shadows next.config.ts (and its Tailwind loader).
       - name: Restore cache
         uses: actions/cache@v4
         with:
@@ -71,9 +71,9 @@ jobs:
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
       - name: Build with Next.js
+        # No PAGES_BASE_PATH: the site is served from the root of the custom
+        # domain (nazibullahnoyon.me), so assets must not get a /<repo> prefix.
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
-        env:
-          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
