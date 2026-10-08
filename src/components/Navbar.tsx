@@ -1,11 +1,11 @@
 import { profile } from "@/data/content";
 
 const links = [
-  ["Expertise", "#expertise"],
-  ["Work", "#work"],
+  ["Skills", "#skills"],
+  ["Toolkit", "#toolkit"],
+  ["Projects", "#projects"],
   ["Craft", "#craft"],
   ["Experience", "#experience"],
-  ["Skills", "#skills"],
   ["API", "#api"],
   ["Contact", "#contact"],
 ];

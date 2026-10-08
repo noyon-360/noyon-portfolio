@@ -9,6 +9,7 @@ import Hero from "@/components/Hero";
 import Navbar from "@/components/Navbar";
 import Projects from "@/components/Projects";
 import Skills from "@/components/Skills";
+import { projectTour, skillTour } from "@/data/content";
 
 export default function Home() {
   return (
@@ -16,14 +17,16 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <ExpertiseJourney />
+        <ExpertiseJourney id="skills" index="02" title="Skills in 3D" entries={skillTour} />
+        <Skills />
+        <ExpertiseJourney id="projects" index="04" title="Projects in 3D" entries={projectTour} />
         <Projects />
         <Craft />
         <Experience />
-        <Skills />
         <ApiDemo />
         <Faq />
         <Contact />
+        {/* Signature sign-off hidden for now — re-enable by restoring <Signature /> here. */}
       </main>
       <Footer />
     </>

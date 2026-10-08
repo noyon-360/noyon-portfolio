@@ -3,7 +3,7 @@ import { Section, Tag } from "./Section";
 
 export default function Skills() {
   return (
-    <Section id="skills" index="06" eyebrow="Toolkit" title="The full stack, client to cloud.">
+    <Section id="toolkit" index="03" eyebrow="Full toolkit" title="The full stack, client to cloud.">
       <dl className="divide-y divide-line border-y border-line">
         {skills.map((s) => (
           <div key={s.group} className="grid gap-3 py-5 md:grid-cols-4">

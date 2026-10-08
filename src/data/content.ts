@@ -25,36 +25,40 @@ export const stats = [
 
 export type Accent = "client" | "server" | "ops" | "craft";
 
-// Each entry is one station of the 3D expertise journey, in scroll order.
-export const expertise: {
+// Every entry is one station of a 3D tour. The pool is split into a skills tour and a projects tour below.
+export type TourEntry = {
   id: string;
   label: string;
+  /** Projects only: the line above the title, e.g. "Client project · Bus booking". */
+  tag?: string;
   title: string;
   accent: Accent;
   summary: string;
   proof: string[];
   metric: { value: string; label: string };
   tools: string[];
-}[] = [
+};
+
+const tourEntries: TourEntry[] = [
   {
     id: "flutter",
-    label: "Client",
+    label: "Flutter & Dart",
     title: "Flutter apps, shipped at scale",
     accent: "client",
     summary:
       "Cross-platform apps for Android, iOS and Android TV — from first screen to store listing, then maintained in production.",
     proof: [
       "Shipped and maintained 35+ apps across Google Play and the App Store",
-      "Custom widgets, animations and Platform Channels (Kotlin/Swift)",
+      "Dart and TypeScript; custom widgets, animations and Platform Channels (Kotlin/Swift)",
       "Cut app startup from 3s to 1.5s with Flutter DevTools profiling",
     ],
     metric: { value: "35+", label: "apps live" },
-    tools: ["Dart", "Flutter", "go_router", "Platform Channels", "DevTools"],
+    tools: ["Dart", "Flutter", "go_router", "Platform Channels", "DevTools", "TypeScript", "SQL"],
   },
   {
     id: "architecture",
-    label: "Architecture",
-    title: "Clean Architecture that holds up",
+    label: "Architecture & tests",
+    title: "Clean Architecture, tested",
     accent: "client",
     summary:
       "Presentation, domain and data kept apart, so features stay testable and a change in one layer doesn't ripple through the app.",
@@ -64,11 +68,12 @@ export const expertise: {
       "Unit, widget, integration, golden and mock-based tests",
     ],
     metric: { value: "99%", label: "crash-free sessions" },
-    tools: ["Bloc/Cubit", "Riverpod", "Provider", "GetX", "SOLID"],
+    tools: ["Clean Architecture", "MVVM", "DI", "Bloc/Cubit", "Riverpod", "GetX", "Golden tests"],
   },
   {
     id: "offline-geo",
-    label: "Offline geo",
+    label: "Envielite",
+    tag: "Client project · Offline travel",
     title: "Landmarks that speak, offline",
     accent: "client",
     summary:
@@ -82,24 +87,120 @@ export const expertise: {
     tools: ["Flutter", "GetX", "Geolocator", "Audioplayers", "SharedPreferences"],
   },
   {
+    id: "couplio",
+    label: "Couplio",
+    tag: "Personal project · Real-time",
+    title: "Two phones, one goal",
+    accent: "client",
+    summary:
+      "Couplio — a calorie app for two. Each partner gets a personal daily target, then they pair by QR code and watch each other's progress live, so they keep each other on track.",
+    proof: [
+      "Daily target from the Mifflin-St Jeor formula, activity level and goal (±500 kcal)",
+      "QR pairing with connection requests and notifications on Cloud Firestore",
+      "Partner progress streamed live with Firestore snapshots; Gemini writes a personal goal message",
+    ],
+    metric: { value: "2", label: "phones, synced live" },
+    tools: ["Flutter", "Firebase Auth", "Cloud Firestore", "Gemini", "QR scan"],
+  },
+  {
+    id: "exodus",
+    label: "Exodus",
+    tag: "Client project · Live transit",
+    title: "Book it, board it, watch it move",
+    accent: "client",
+    summary:
+      "Exodus — bus booking for passengers. Book a seat or a whole bus, show a QR ticket to the driver, follow the bus live on the map, and pay when the ride ends.",
+    proof: [
+      "QR tickets issued by the backend; the driver scans them to board",
+      "Live bus location over Socket.IO rooms, drawn on an OpenStreetMap view",
+      "Stripe PaymentSheet with server-side intents; Dio token refresh and a Hive cache for weak networks",
+    ],
+    metric: { value: "4", label: "steps: book · scan · ride · pay" },
+    tools: ["Flutter", "Socket.IO", "flutter_map", "Stripe", "Dio", "Hive"],
+  },
+  {
+    id: "azlotv",
+    label: "AzloTV",
+    tag: "Client project · Streaming",
+    title: "A TV channel in your pocket",
+    accent: "client",
+    summary:
+      "AzloTV — the client's own streaming app for the shows and episodes they host: movies, series by season and episode, a vertical reels feed, and a player that remembers where you stopped.",
+    proof: [
+      "Series with season & episode navigation; full-screen Chewie player that resumes from your last position",
+      "Vertical reels feed, genres, upcoming titles, likes, watchlist and watch history",
+      "Live search over Socket.IO; ads for free viewers, skipped for premium",
+    ],
+    metric: { value: "3", label: "formats: movies · series · reels" },
+    tools: ["Flutter", "GetX", "Chewie", "Socket.IO", "Dio", "Hive"],
+  },
+  {
+    id: "cosmoquest",
+    label: "CosmoQuest",
+    tag: "Personal project · EdTech",
+    title: "Learning space by playing it",
+    accent: "client",
+    summary:
+      "CosmoQuest (Exoplanet Explorer) — learn about exoplanets from NASA data, test it in quizzes and a planet-matching game, and climb the leaderboard.",
+    proof: [
+      "NASA Astronomy Picture of the Day, plus live queries to NASA's Exoplanet Archive",
+      "Habitable-zone explorer: Earth-size planets (0.8–1.25 R⊕) around stars of 2,600–7,200 K",
+      "Quizzes, drag-and-drop planet matching, a level map, and daily / weekly / all-time leaderboards",
+    ],
+    metric: { value: "3", label: "leaderboards: daily · weekly · all-time" },
+    tools: ["Flutter", "Firebase", "NASA APIs", "Provider", "MVVM"],
+  },
+  {
     id: "backend",
-    label: "Backend",
+    label: "Backend & data",
     title: "NestJS services behind the apps",
     accent: "server",
     summary:
-      "Modular backends with guarded routes, validated input and payments that survive retries.",
+      "Modular Node backends for the apps I ship — guarded APIs, real-time channels, queues and payments that survive retries.",
     proof: [
-      "Built BeatX solo: ~25k lines across 25 NestJS modules",
-      "JWT auth with bcrypt-hashed refresh tokens and role-based guards",
-      "Idempotent Stripe webhooks, DTO whitelisting, and a written security risk register",
+      "NestJS, Node.js and Express REST APIs with JWT auth and role-based guards",
+      "Real-time over WebSockets/SSE and Socket.IO; background jobs on BullMQ",
+      "MongoDB, MySQL and Redis; Stripe payments, AWS S3 storage, ffmpeg/HLS media",
     ],
-    metric: { value: "25", label: "modules, one engineer" },
-    tools: ["NestJS", "Node.js", "MongoDB", "MySQL", "Redis", "Stripe"],
+    metric: { value: "25", label: "modules in one backend, solo" },
+    tools: ["NestJS", "Node.js", "Express", "MongoDB", "MySQL", "Redis", "BullMQ", "Socket.IO"],
+  },
+  {
+    id: "firebase",
+    label: "Firebase",
+    title: "Firebase, end to end",
+    accent: "server",
+    summary:
+      "When an app needs a backend fast, Firebase carries it: sign-in, live data, push, server logic and the crash reports that keep it healthy.",
+    proof: [
+      "Authentication with email, Google and Apple; Firestore with live snapshots",
+      "Cloud Messaging push notifications and Node Cloud Functions",
+      "Crashlytics and Analytics watching every release",
+    ],
+    metric: { value: "6", label: "Firebase services in production" },
+    tools: ["Auth", "Firestore", "FCM", "Cloud Functions", "Crashlytics", "Analytics"],
+  },
+  {
+    id: "ml-security",
+    label: "Thesis",
+    tag: "University thesis · ML security",
+    title: "Catching attacks in network traffic",
+    accent: "server",
+    summary:
+      "My thesis: a machine-learning intrusion detector that turns live network packets into flow features and flags attacks like DDoS, port scans and brute force.",
+    proof: [
+      "Trained on 19k labelled CIC-IDS flows — 14 attack types plus benign traffic",
+      "Compared 6 models: XGBoost and Random Forest reached 98% accuracy; unsupervised ones 52–66%",
+      "Live capture with Scapy builds 78 flow features per connection and classifies each one",
+    ],
+    metric: { value: "98%", label: "accuracy · XGBoost & RF" },
+    tools: ["Python", "scikit-learn", "XGBoost", "Scapy", "pandas"],
   },
   {
     id: "streaming",
-    label: "Media",
-    title: "Adaptive streaming on one server",
+    label: "BeatX",
+    tag: "Client project · Streaming backend",
+    title: "BeatX: adaptive streaming on one server",
     accent: "server",
     summary:
       "Multi-GB uploads streamed straight to S3, then transcoded by ffmpeg into HLS renditions off a job queue — memory stays flat.",
@@ -113,7 +214,7 @@ export const expertise: {
   },
   {
     id: "release",
-    label: "Release",
+    label: "DevOps & release",
     title: "From commit to store, automatically",
     accent: "ops",
     summary:
@@ -121,14 +222,15 @@ export const expertise: {
     proof: [
       "GitHub Actions and Codemagic pipelines for build, test and release",
       "Shorebird over-the-air updates for urgent fixes",
-      "Firebase Crashlytics and Analytics watching every release",
+      "Backends on AWS EC2/S3 and VPS with PM2; releases through App Store Connect and Play Console",
     ],
     metric: { value: "6", label: "releases / month" },
-    tools: ["GitHub Actions", "Codemagic", "Shorebird", "AWS EC2", "PM2"],
+    tools: ["Git", "GitHub Actions", "Codemagic", "Shorebird", "AWS EC2/S3", "VPS", "PM2"],
   },
   {
     id: "hardware",
-    label: "Hardware",
+    label: "Waiter Robot",
+    tag: "Personal project · IoT",
     title: "A waiter robot, app to wheels",
     accent: "craft",
     summary:
@@ -172,6 +274,16 @@ export const expertise: {
     tools: ["Code review", "Mentoring", "Architecture", "Planning"],
   },
 ];
+const pick = (ids: string[]) =>
+  ids.map((id) => {
+    const entry = tourEntries.find((e) => e.id === id);
+    if (!entry) throw new Error(`Unknown tour entry: ${id}`);
+    return entry;
+  });
+
+export const skillTour = pick(["flutter", "architecture", "backend", "firebase", "release", "design", "team"]);
+export const projectTour = pick(["streaming", "exodus", "azlotv", "offline-geo", "couplio", "cosmoquest", "hardware", "ml-security"]);
+
 
 export const projects = [
   {
@@ -202,6 +314,62 @@ export const projects = [
       "On-device GPS checks 300 m geofences every 10 seconds; a queue plays one narration at a time, and an in-app admin panel stores routes, landmarks and audio in 8 languages locally.",
     facts: ["300 m geofences", "5 routes", "8 languages"],
     links: [{ label: "GitHub", href: "https://github.com/FSDTeam-SAA/flutter_envielite" }],
+  },
+  {
+    slug: "exodus",
+    title: "Exodus",
+    kind: "Client project",
+    category: "Bus booking · Flutter",
+    stack: ["Flutter", "Socket.IO", "flutter_map", "Stripe", "Dio", "Hive", "get_it"],
+    summary:
+      "A bus-booking app: passengers book a seat or reserve a whole bus, board with a QR ticket the driver scans, follow the bus live, and pay when they arrive.",
+    challenge: "Keep passengers informed in real time — where the bus is, whether they've boarded, what they owe — on patchy mobile networks.",
+    solution:
+      "Socket.IO rooms stream each bus's location to a flutter_map view; tickets carry server-issued QR codes; Stripe PaymentSheet takes payment. Dio with token refresh and a Hive cache keeps it usable on weak connections — all in Clean Architecture with get_it and dartz.",
+    facts: ["~14.5k lines", "Live map", "Stripe"],
+    links: [] as { label: string; href: string }[],
+  },
+  {
+    slug: "azlotv",
+    title: "AzloTV",
+    kind: "Client project",
+    category: "Streaming · Flutter",
+    stack: ["Flutter", "GetX", "Chewie", "video_player", "Socket.IO", "Dio", "Hive"],
+    summary:
+      "The client's own TV app for the shows and episodes they host — movies, series, a reels feed, and a player that picks up where you left off.",
+    challenge: "Make a small network's catalogue feel like a big streaming service: fast browsing, smooth playback, free and premium viewers.",
+    solution:
+      "Season/episode navigation and a full-screen Chewie player that resumes from the last position; reels, genres, watchlist and history; live Socket.IO search; ads only for free viewers. Dio with a Hive cache, organised as feature modules.",
+    facts: ["~16.5k lines", "Movies · series · reels", "Live search"],
+    links: [{ label: "GitHub", href: "https://github.com/noyon-360/flutter_flimsa_v2" }],
+  },
+  {
+    slug: "cosmoquest",
+    title: "CosmoQuest",
+    kind: "Personal project",
+    category: "EdTech · Flutter · NASA",
+    stack: ["Flutter", "Firebase Auth", "Firestore", "Firebase Storage", "NASA APIs", "Provider", "MVVM"],
+    summary:
+      "Exoplanet Explorer: an educational app that pairs NASA content with games — learn, quiz yourself, match planets, and climb the leaderboard.",
+    challenge: "Turn real astronomy data into something people want to come back to.",
+    solution:
+      "NASA's APOD and Exoplanet Archive feed the learning screens and a habitable-zone explorer; quizzes, a planet-matching game and a level map reward progress on daily, weekly and all-time leaderboards you can share as an image. Firebase auth with Google sign-in, profile photos in Storage, MVVM with Provider.",
+    facts: ["NASA data", "Habitable-zone explorer", "Shareable leaderboard"],
+    links: [{ label: "GitHub", href: "https://github.com/noyon-360/CosmoQuest" }],
+  },
+  {
+    slug: "couplio",
+    title: "Couplio",
+    kind: "Personal project",
+    category: "Flutter · Firebase · AI",
+    stack: ["Flutter", "Firebase Auth", "Cloud Firestore", "Gemini 1.5 Flash", "QR scan"],
+    summary:
+      "A calorie tracker for two: each partner gets a personal daily target, pairs by QR code, and sees the other's progress live so they can guide each other.",
+    challenge: "Make a diet a shared habit instead of a solo chore — without partners having to message each other.",
+    solution:
+      "Onboarding computes a daily target (Mifflin-St Jeor × activity, ±500 kcal for the goal); QR pairing links the two accounts in Firestore, and live snapshots keep both progress rings in sync. Google & Apple sign-in; Gemini adds a personal goal message.",
+    facts: ["QR pairing", "Live sync", "Google & Apple sign-in"],
+    links: [{ label: "GitHub", href: "https://github.com/noyon-360/couplio" }],
   },
   {
     slug: "smilestreats",
@@ -267,6 +435,20 @@ export const education = {
   period: "2021 – 2025",
   place: "Banani, Dhaka",
   note: "GPA 3.4",
+  thesis: {
+    title: "Machine learning for network intrusion detection",
+    summary:
+      "Detects common cyber attacks from network flows — trained on CIC-IDS data, then run live on captured packets.",
+    results: [
+      { model: "XGBoost", score: 98.4 },
+      { model: "Random Forest", score: 98.0 },
+      { model: "SVM", score: 85.7 },
+      { model: "One-Class SVM", score: 66 },
+      { model: "Autoencoder", score: 54 },
+      { model: "Isolation Forest", score: 52 },
+    ],
+    href: "https://github.com/noyon-360/ML-in-Cyber-security",
+  },
 };
 
 export const skills = [
@@ -285,11 +467,13 @@ export const skills = [
     group: "DevOps & Tooling",
     items: ["Git", "GitHub Actions", "Codemagic", "Shorebird", "CI/CD", "AWS (EC2/S3)", "VPS", "PM2", "App Store Connect", "Google Play Console"],
   },
+  { group: "Machine Learning", items: ["Python", "scikit-learn", "XGBoost", "pandas", "Scapy", "Jupyter"] },
   { group: "Hardware & IoT", items: ["Arduino (C++)", "Bluetooth (HC-05)", "Motor drivers", "Ultrasonic & IR sensors"] },
   {
     group: "Design & Media",
     items: ["Photoshop", "Illustrator", "InDesign", "Lightroom Classic", "XD", "Premiere Pro", "After Effects", "Audition", "Arabic calligraphy"],
   },
+  { group: "Spoken", items: ["English (professional proficiency)"] },
 ];
 
 // "Beyond code": each track is shown as its process, from plan to finished piece.

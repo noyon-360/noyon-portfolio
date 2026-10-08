@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
-import { expertise } from "@/data/content";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { TourEntry } from "@/data/content";
 
 const JourneyScene = dynamic(() => import("./JourneyScene"), { ssr: false });
 
@@ -10,14 +10,26 @@ const accentText = { client: "text-client", server: "text-server", ops: "text-op
 const accentBg = { client: "bg-client", server: "bg-server", ops: "bg-ops", craft: "bg-craft" } as const;
 const sideLabel = { client: "Client side", server: "Server side", ops: "Delivery", craft: "Hands-on" } as const;
 
-export default function ExpertiseJourney() {
+// A pinned 3D tour: scrolling moves the camera from station to station while the matching panel shows.
+export default function ExpertiseJourney({
+  id,
+  index,
+  title,
+  entries,
+}: {
+  id: string;
+  index: string;
+  title: string;
+  entries: TourEntry[];
+}) {
   const sectionRef = useRef<HTMLElement>(null);
   const progress = useRef(0);
   const [active, setActive] = useState(0);
   const [inView, setInView] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [bar, setBar] = useState(0);
-  const last = expertise.length - 1;
+  const last = entries.length - 1;
+  const ids = useMemo(() => entries.map((e) => e.id), [entries]);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -60,15 +72,15 @@ export default function ExpertiseJourney() {
 
   return (
     <section
-      id="expertise"
+      id={id}
       ref={sectionRef}
-      aria-label="Expertise, explored in 3D"
+      aria-label={title}
       className="relative"
-      style={{ height: `${expertise.length * 100 + 40}svh` }}
+      style={{ height: `${entries.length * 100 + 40}svh` }}
     >
       <div className="sticky top-0 h-svh overflow-hidden bg-ink">
         <div className="absolute inset-0" aria-hidden="true">
-          <JourneyScene progressRef={progress} active={active} running={inView} reduced={reduced} />
+          <JourneyScene ids={ids} progressRef={progress} active={active} running={inView} reduced={reduced} />
         </div>
 
         {/* Scrims keep the text readable over the scene. */}
@@ -78,15 +90,15 @@ export default function ExpertiseJourney() {
         <div className="relative mx-auto flex h-full max-w-6xl flex-col px-4 pb-6 pt-20 sm:px-6 md:pb-10 md:pt-24">
           <div className="flex items-center justify-between gap-4 font-mono text-xs uppercase tracking-[0.2em] text-muted">
             <span>
-              <span className="text-text">02</span> / Expertise in 3D
+              <span className="text-text">{index}</span> / {title}
             </span>
             <span aria-live="polite">
-              Step <span className="text-text">{String(active + 1).padStart(2, "0")}</span> / {String(expertise.length).padStart(2, "0")}
+              Step <span className="text-text">{String(active + 1).padStart(2, "0")}</span> / {String(entries.length).padStart(2, "0")}
             </span>
           </div>
 
           <div className="relative mt-auto grid flex-1 md:mt-0 md:items-center">
-            {expertise.map((e, i) => (
+            {entries.map((e, i) => (
               <article
                 key={e.id}
                 aria-hidden={i !== active}
@@ -96,7 +108,7 @@ export default function ExpertiseJourney() {
                 }`}
               >
                 <p className={`font-mono text-xs uppercase tracking-[0.2em] ${accentText[e.accent]}`}>
-                  {String(i + 1).padStart(2, "0")} · {sideLabel[e.accent]} · {e.label}
+                  {String(i + 1).padStart(2, "0")} · {e.tag ?? `${sideLabel[e.accent]} · ${e.label}`}
                 </p>
                 <h2 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight text-text sm:text-4xl">
                   {e.title}
@@ -128,8 +140,8 @@ export default function ExpertiseJourney() {
           </div>
 
           <div className="mt-6 flex items-center gap-4">
-            <nav aria-label="Expertise steps" className="flex flex-1 gap-1.5">
-              {expertise.map((e, i) => (
+            <nav aria-label={`${title} steps`} className="flex flex-1 gap-1.5">
+              {entries.map((e, i) => (
                 <button
                   key={e.id}
                   onClick={() => goTo(i)}
@@ -138,7 +150,7 @@ export default function ExpertiseJourney() {
                 >
                   <span className={`block h-0.5 rounded-full transition-colors ${i <= active ? accentBg[e.accent] : "bg-line"}`} />
                   <span
-                    className={`mt-2 hidden font-mono text-[11px] uppercase tracking-widest transition-colors md:block ${
+                    className={`mt-2 hidden truncate font-mono text-[10px] uppercase tracking-wider transition-colors md:block ${
                       i === active ? "text-text" : "text-muted group-hover:text-text"
                     }`}
                   >

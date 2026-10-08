@@ -34,7 +34,7 @@ export default function Craft() {
   return (
     <Section
       id="craft"
-      index="04"
+      index="06"
       eyebrow="Beyond code"
       title="Same method, different materials."
       intro="I plan on a grid, then build — whether it's an app, a robot chassis, a poster or a line of calligraphy."

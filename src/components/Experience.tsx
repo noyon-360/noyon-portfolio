@@ -3,7 +3,7 @@ import { Section } from "./Section";
 
 export default function Experience() {
   return (
-    <Section id="experience" index="05" eyebrow="Experience" title="Where the work happened.">
+    <Section id="experience" index="07" eyebrow="Experience" title="Where the work happened.">
       <div className="grid gap-10 lg:grid-cols-3">
         <ol className="relative space-y-10 border-l border-line pl-6 sm:pl-8 lg:col-span-2">
           {experience.map((e, i) => (
@@ -37,6 +37,31 @@ export default function Experience() {
             {education.period} · {education.place}
           </p>
           <p className="mt-2 font-display text-2xl">{education.note}</p>
+
+          <div className="mt-6 border-t border-line pt-6">
+            <p className="font-mono text-xs uppercase tracking-widest text-server">Thesis</p>
+            <h4 className="mt-2 font-display text-lg font-semibold">{education.thesis.title}</h4>
+            <p className="mt-2 text-sm text-muted">{education.thesis.summary}</p>
+            <figure className="mt-5">
+              <figcaption className="font-mono text-[11px] uppercase tracking-widest text-muted">Test accuracy by model</figcaption>
+              <dl className="mt-3 space-y-2.5">
+                {education.thesis.results.map((r) => (
+                  <div key={r.model} title={`${r.model}: ${r.score}% accuracy`} className="group">
+                    <div className="flex justify-between text-xs">
+                      <dt className="text-muted group-hover:text-text">{r.model}</dt>
+                      <dd className="font-mono text-text">{r.score}%</dd>
+                    </div>
+                    <div className="mt-1 h-1.5 rounded-full bg-line" aria-hidden="true">
+                      <div className="h-1.5 rounded-full bg-server transition-opacity group-hover:opacity-80" style={{ width: `${r.score}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </dl>
+            </figure>
+            <a href={education.thesis.href} target="_blank" rel="noreferrer" className="mt-5 inline-block font-mono text-xs uppercase tracking-widest text-text hover:underline">
+              Code &amp; notebooks ↗
+            </a>
+          </div>
         </aside>
       </div>
     </Section>

@@ -5,7 +5,7 @@ import { Section } from "./Section";
 
 const endpoints = [
   { path: "/api/profile", note: "Who I am and how to reach me" },
-  { path: "/api/expertise", note: "The six areas from the 3D tour" },
+  { path: "/api/skills", note: "The skills from the 3D tour" },
   { path: "/api/projects", note: "Selected work" },
   { path: "/api/health", note: "Service health check" },
 ];
@@ -43,7 +43,7 @@ export default function ApiDemo() {
   return (
     <Section
       id="api"
-      index="07"
+      index="08"
       eyebrow="Playground"
       title="This portfolio has an API."
       intro="Pick an endpoint and send a real request — the same data that renders this page."

@@ -7,10 +7,10 @@ export default function Projects() {
   return (
     <Section
       id="work"
-      index="03"
-      eyebrow="Selected work"
-      title="Products I built, end to end."
-      intro="A backend I wrote solo, an offline tour guide for sightseeing flights, an e-commerce app I took to both stores, and a streaming client that runs on a TV remote."
+      index="05"
+      eyebrow="Project details"
+      title="Every project, in detail."
+      intro="A backend I wrote solo, an offline tour guide for sightseeing flights, live bus booking, a client's own TV app, a space-learning game, a calorie app for two, an e-commerce app I took to both stores, and a streaming client that runs on a TV remote."
     >
       <article className="overflow-hidden rounded-2xl border border-line bg-panel">
         <div className="grid lg:grid-cols-5">

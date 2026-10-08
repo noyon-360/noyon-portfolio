@@ -9,18 +9,14 @@ import { ACCENT_HEX } from "@/lib/accents";
 const BG = "#07080c";
 const { client: BLUE, server: RED, ops: AMBER, craft: VIOLET } = ACCENT_HEX;
 
-// One station per expertise entry, laid out along a winding path into the scene.
-const STATIONS: [number, number, number][] = [
-  [0, 0, 0],
-  [10, 0.6, -16],
-  [0, -0.2, -32],
-  [-10, 0.5, -48],
-  [0, 0, -64],
-  [10, 0.3, -80],
-  [0, 0, -96],
-  [-10, 0.4, -112],
-  [0, 0, -128],
-];
+type Vec3 = [number, number, number];
+
+// Stations are laid out along a winding path into the scene, one every 16 units.
+function stationPositions(count: number): Vec3[] {
+  const xs = [0, 10, 0, -10];
+  const ys = [0, 0.6, -0.2, 0.5];
+  return Array.from({ length: count }, (_, i) => [xs[i % 4], ys[i % 4], -16 * i]);
+}
 
 const Y_AXIS = new THREE.Vector3(0, 1, 0);
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -72,7 +68,7 @@ function Label({ children, position, show }: { children: string; position?: [num
   return <group ref={anchorRef} position={position} />;
 }
 
-function Rig({ progressRef, cursorRef, reduced }: { progressRef: RefObject<number>; cursorRef: RefObject<number>; reduced: boolean }) {
+function Rig({ stations, progressRef, cursorRef, reduced }: { stations: Vec3[]; progressRef: RefObject<number>; cursorRef: RefObject<number>; reduced: boolean }) {
   const { camera, size } = useThree();
   const v = useMemo(
     () => ({
@@ -88,14 +84,14 @@ function Rig({ progressRef, cursorRef, reduced }: { progressRef: RefObject<numbe
   const readyRef = useRef(false);
 
   useFrame((state, dt) => {
-    const last = STATIONS.length - 1;
+    const last = Math.max(1, stations.length - 1);
     const t = progressRef.current * last;
     const i = Math.min(last - 1, Math.floor(t));
     // Dwell on each station, then travel: the "steps" of the journey.
     const eased = THREE.MathUtils.smoothstep(t - i, 0.22, 0.78);
 
-    v.a.set(...STATIONS[i]);
-    v.b.set(...STATIONS[i + 1]);
+    v.a.set(...stations[i]);
+    v.b.set(...stations[Math.min(i + 1, stations.length - 1)]);
     v.station.lerpVectors(v.a, v.b, eased);
 
     // Desktop: object sits right of the text panel. Mobile: above the bottom panel.
@@ -126,10 +122,10 @@ function Rig({ progressRef, cursorRef, reduced }: { progressRef: RefObject<numbe
   return null;
 }
 
-function Path({ reduced }: { reduced: boolean }) {
+function Path({ stations, reduced }: { stations: Vec3[]; reduced: boolean }) {
   const curve = useMemo(
-    () => new THREE.CatmullRomCurve3(STATIONS.map(([x, y, z]) => new THREE.Vector3(x, y - 1.8, z))),
-    [],
+    () => new THREE.CatmullRomCurve3(stations.map(([x, y, z]) => new THREE.Vector3(x, y - 1.8, z))),
+    [stations],
   );
   const points = useMemo(() => curve.getPoints(300), [curve]);
   const packets = useRef<(THREE.Mesh | null)[]>([]);
@@ -417,7 +413,511 @@ function GeoStation({ index, cursorRef, reduced, active }: StationProps) {
   );
 }
 
-/* 04 — NestJS backend: 25 modules under a rotating auth guard. */
+/* 04 — Couplio: two phones pair over a QR code; their calorie rings stay in sync through Firestore. */
+const RING_DOTS = 28;
+
+// A fixed, QR-like pattern: three finder squares plus a deterministic scatter.
+const QR_CELLS = (() => {
+  const n = 11;
+  const cells: [number, number][] = [];
+  const finder = (r: number, c: number) =>
+    [[0, 3], [n - 4, n - 1]].some(([a, b]) => r >= a && r <= b && c >= 0 && c <= 3) || (r >= 0 && r <= 3 && c >= n - 4);
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (finder(r, c) ? !(r % 3 === 1 && c % 3 === 1) && !(r === 2 && c === 2) : (r * 7 + c * 13 + r * c) % 5 < 2) {
+        cells.push([c - (n - 1) / 2, r - (n - 1) / 2]);
+      }
+    }
+  }
+  return cells;
+})();
+
+function CoupleStation({ index, cursorRef, reduced, active }: StationProps) {
+  const phones = useRef<(THREE.Group | null)[]>([]);
+  const dots = useRef<(THREE.MeshBasicMaterial | null)[][]>([[], []]);
+  const packets = useRef<(THREE.Mesh | null)[]>([]);
+  const spark = useRef<THREE.Group>(null);
+  const v = useMemo(
+    () => ({
+      on: new THREE.Color(BLUE),
+      partner: new THREE.Color("#3ddc97"),
+      off: new THREE.Color("#1d2633"),
+      cloud: new THREE.Vector3(0, 1.75, -0.4),
+      a: new THREE.Vector3(),
+      b: new THREE.Vector3(),
+    }),
+    [],
+  );
+
+  useFrame(({ clock }) => {
+    const t = reduced ? 1.2 : clock.elapsedTime;
+    const f = focusOf(cursorRef.current, index);
+    const spread = 1.55 + (1 - f) * 1.6;
+    const progress = [0.35 + ((t * 0.05) % 0.55), 0.25 + (((t + 4) * 0.045) % 0.6)];
+    phones.current.forEach((g, k) => {
+      if (!g) return;
+      const side = k ? 1 : -1;
+      g.position.set(side * spread, Math.sin(t * 0.9 + k) * 0.05, 0);
+      dots.current[k].forEach((m, d) => {
+        if (m) m.color.copy(d / RING_DOTS < progress[k] ? (k ? v.partner : v.on) : v.off);
+      });
+    });
+    packets.current.forEach((m, k) => {
+      if (!m) return;
+      const fromLeft = k % 2 === 0;
+      const u = (t * 0.45 + k * 0.25) % 1;
+      // Up from one phone to Firestore, then down to the other.
+      v.a.set((fromLeft ? -1 : 1) * spread, 0.6, 0.1);
+      v.b.set((fromLeft ? 1 : -1) * spread, 0.6, 0.1);
+      if (u < 0.5) m.position.lerpVectors(v.a, v.cloud, u * 2);
+      else m.position.lerpVectors(v.cloud, v.b, (u - 0.5) * 2);
+      m.visible = f > 0.3;
+    });
+    if (spark.current) {
+      spark.current.rotation.z = t * 0.8;
+      spark.current.scale.setScalar(0.9 + Math.sin(t * 3) * 0.12);
+    }
+  });
+
+  return (
+    <group rotation={[0.12, 0, 0]}>
+      {[0, 1].map((k) => (
+        <group key={k} ref={(g) => { phones.current[k] = g; }} rotation={[0, k ? -0.35 : 0.35, 0]}>
+          <mesh>
+            <boxGeometry args={[1.05, 2.1, 0.08]} />
+            <meshStandardMaterial color="#14171f" metalness={0.5} roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 0, 0.042]}>
+            <planeGeometry args={[0.95, 1.95]} />
+            <meshBasicMaterial color="#0b1220" />
+          </mesh>
+          {Array.from({ length: RING_DOTS }, (_, d) => {
+            const a = Math.PI / 2 - (d / RING_DOTS) * Math.PI * 2;
+            return (
+              <mesh key={d} position={[Math.cos(a) * 0.32, 0.35 + Math.sin(a) * 0.32, 0.05]}>
+                <circleGeometry args={[0.032, 10]} />
+                <meshBasicMaterial ref={(m) => { dots.current[k][d] = m; }} color="#1d2633" />
+              </mesh>
+            );
+          })}
+          {[-0.25, -0.45, -0.65].map((y, r) => (
+            <mesh key={y} position={[-0.05 * r, y, 0.05]}>
+              <planeGeometry args={[0.7 - r * 0.12, 0.09]} />
+              <meshBasicMaterial color="#e9edf3" transparent opacity={0.16} />
+            </mesh>
+          ))}
+          <Label show={active} position={[0, -1.3, 0]}>{k ? "partner" : "you"}</Label>
+        </group>
+      ))}
+
+      <group position={[0, -1.15, 0.5]} rotation={[-1.05, 0, 0]}>
+        <mesh>
+          <boxGeometry args={[1, 1, 0.04]} />
+          <meshStandardMaterial color="#e9edf3" />
+        </mesh>
+        {QR_CELLS.map(([x, y], i) => (
+          <mesh key={i} position={[x * 0.08, y * 0.08, 0.03]}>
+            <boxGeometry args={[0.075, 0.075, 0.02]} />
+            <meshStandardMaterial color="#0b0d12" />
+          </mesh>
+        ))}
+        <Label show={active} position={[0, -0.7, 0]}>QR pairing</Label>
+      </group>
+
+      <group position={v.cloud}>
+        {[[0, 0, 0, 0.32], [-0.32, -0.08, 0, 0.22], [0.32, -0.06, 0, 0.24]].map(([x, y, z, r], k) => (
+          <mesh key={k} position={[x, y, z]}>
+            <icosahedronGeometry args={[r, 1]} />
+            <meshStandardMaterial color="#ffb547" emissive="#ffb547" emissiveIntensity={0.35} flatShading />
+          </mesh>
+        ))}
+        <Label show={active} position={[0, 0.6, 0]}>Cloud Firestore · live snapshots</Label>
+      </group>
+      {[0, 1, 2, 3].map((k) => (
+        <mesh key={k} ref={(m) => { packets.current[k] = m; }}>
+          <sphereGeometry args={[0.05, 10, 10]} />
+          <meshBasicMaterial color={k % 2 ? "#3ddc97" : BLUE} />
+        </mesh>
+      ))}
+
+      <group ref={spark} position={[-2.1, 1.4, 0.3]}>
+        {[0, Math.PI / 2].map((r) => (
+          <mesh key={r} rotation={[0, 0, r]} scale={[0.35, 1, 0.35]}>
+            <octahedronGeometry args={[0.2, 0]} />
+            <meshStandardMaterial color={VIOLET} emissive={VIOLET} emissiveIntensity={0.9} />
+          </mesh>
+        ))}
+      </group>
+      <Label show={active} position={[-1.7, 1.9, 0.3]}>Gemini goal message</Label>
+    </group>
+  );
+}
+
+/* 05 — Exodus: book → driver scans the QR → bus streams its location live → pay on arrival. */
+const BUS_ROUTE: [number, number][] = [
+  [-2.6, 0.9],
+  [-1.3, -0.3],
+  [0.3, 0.5],
+  [1.7, -0.5],
+  [2.7, 0.3],
+];
+
+function TransitStation({ index, cursorRef, reduced, active }: StationProps) {
+  const bus = useRef<THREE.Group>(null);
+  const pings = useRef<(THREE.Mesh | null)[]>([]);
+  const packets = useRef<(THREE.Mesh | null)[]>([]);
+  const scanner = useRef<THREE.MeshBasicMaterial>(null);
+  const card = useRef<THREE.MeshStandardMaterial>(null);
+  const route = useMemo(() => new THREE.CatmullRomCurve3(BUS_ROUTE.map(([x, z]) => new THREE.Vector3(x, 0, z))), []);
+  const routePoints = useMemo(() => route.getPoints(120).map((p) => p.clone().setY(0.02)), [route]);
+  const v = useMemo(
+    () => ({
+      p: new THREE.Vector3(),
+      next: new THREE.Vector3(),
+      phone: new THREE.Vector3(-2.2, 1.55, 0.6),
+      paid: new THREE.Color("#3ddc97"),
+      unpaid: new THREE.Color("#1d2633"),
+    }),
+    [],
+  );
+
+  useFrame(({ clock }) => {
+    const t = reduced ? 3 : clock.elapsedTime;
+    const f = focusOf(cursorRef.current, index);
+    // Each loop: wait at the first stop (boarding), drive, then wait at the last stop (payment).
+    const loop = (t * 0.09) % 1;
+    const u = THREE.MathUtils.clamp((loop - 0.12) / 0.7, 0, 1);
+    route.getPointAt(u, v.p);
+    route.getPointAt(Math.min(u + 0.01, 1), v.next);
+    if (bus.current) {
+      bus.current.position.set(v.p.x, 0.2, v.p.z);
+      if (u < 0.99) bus.current.lookAt(v.next.x, 0.2, v.next.z);
+    }
+    if (scanner.current) scanner.current.opacity = loop < 0.12 ? (0.35 + Math.abs(Math.sin(t * 9)) * 0.5) * f : 0;
+    if (card.current) {
+      card.current.emissive.copy(loop > 0.82 ? v.paid : v.unpaid);
+      card.current.emissiveIntensity = loop > 0.82 ? 0.8 : 0.1;
+    }
+    const moving = u > 0 && u < 1;
+    pings.current.forEach((m, k) => {
+      if (!m) return;
+      const w = (t * 0.9 + k / 2) % 1;
+      m.position.set(v.p.x, 0.04, v.p.z);
+      m.scale.setScalar(0.2 + w * 1.4);
+      (m.material as THREE.MeshBasicMaterial).opacity = moving ? (1 - w) * 0.8 * f : 0;
+    });
+    packets.current.forEach((m, k) => {
+      if (!m) return;
+      const w = (t * 0.6 + k / 3) % 1;
+      m.position.lerpVectors(v.p, v.phone, w);
+      m.position.y += Math.sin(w * Math.PI) * 0.5 + 0.3 * (1 - w);
+      m.visible = moving && f > 0.2;
+    });
+  });
+
+  const start = BUS_ROUTE[0];
+  const end = BUS_ROUTE[BUS_ROUTE.length - 1];
+  return (
+    <group rotation={[0.42, -0.1, 0]} position={[-0.45, -0.2, 0]} scale={0.85}>
+      <mesh position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[3.3, 56]} />
+        <meshStandardMaterial color="#121621" />
+      </mesh>
+      <Line points={routePoints} color="#e9edf3" lineWidth={2} transparent opacity={0.35} />
+      {BUS_ROUTE.map(([x, z], k) => (
+        <mesh key={k} position={[x, 0.03, z]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.09, 0.15, 24]} />
+          <meshBasicMaterial color={k === 0 || k === BUS_ROUTE.length - 1 ? BLUE : "#8d97a8"} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+
+      <group ref={bus}>
+        <mesh position={[0, 0.06, 0]}>
+          <boxGeometry args={[0.32, 0.3, 0.78]} />
+          <meshStandardMaterial color={BLUE} metalness={0.2} roughness={0.5} />
+        </mesh>
+        <mesh position={[0, 0.12, 0]}>
+          <boxGeometry args={[0.33, 0.09, 0.7]} />
+          <meshStandardMaterial color="#0b1220" />
+        </mesh>
+        {[-0.25, 0.25].flatMap((z) =>
+          [-0.17, 0.17].map((x) => (
+            <mesh key={`${x}${z}`} position={[x, -0.1, z]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.07, 0.07, 0.05, 12]} />
+              <meshStandardMaterial color="#14161b" />
+            </mesh>
+          )),
+        )}
+      </group>
+      {[0, 1].map((k) => (
+        <mesh key={k} ref={(m) => { pings.current[k] = m; }} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.35, 0.012, 6, 40]} />
+          <meshBasicMaterial color={BLUE} transparent opacity={0} />
+        </mesh>
+      ))}
+      {[0, 1, 2].map((k) => (
+        <mesh key={k} ref={(m) => { packets.current[k] = m; }}>
+          <sphereGeometry args={[0.045, 10, 10]} />
+          <meshBasicMaterial color={BLUE} />
+        </mesh>
+      ))}
+
+      <mesh position={[start[0], 0.45, start[1]]}>
+        <boxGeometry args={[0.6, 0.9, 0.02]} />
+        <meshBasicMaterial ref={scanner} color={RED} transparent opacity={0} depthWrite={false} />
+      </mesh>
+      <Label show={active} position={[start[0] + 0.1, 1.15, start[1]]}>driver scans QR</Label>
+
+      <group position={v.phone} rotation={[-0.42, 0.3, 0]}>
+        <mesh>
+          <boxGeometry args={[0.55, 1.05, 0.05]} />
+          <meshStandardMaterial color="#14171f" metalness={0.5} roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 0.05, 0.028]}>
+          <planeGeometry args={[0.42, 0.42]} />
+          <meshBasicMaterial color="#e9edf3" />
+        </mesh>
+        {QR_CELLS.map(([x, y], i) => (
+          <mesh key={i} position={[x * 0.034, 0.05 + y * 0.034, 0.032]}>
+            <planeGeometry args={[0.032, 0.032]} />
+            <meshBasicMaterial color="#0b0d12" />
+          </mesh>
+        ))}
+        <Label show={active} position={[0.75, 0.55, 0]}>ticket QR · live bus</Label>
+      </group>
+
+      <group position={[end[0] - 0.55, 0.9, end[1] - 0.3]} rotation={[0.2, -0.4, 0]}>
+        <mesh>
+          <boxGeometry args={[0.62, 0.4, 0.03]} />
+          <meshStandardMaterial ref={card} color="#1b2230" emissive="#1d2633" metalness={0.4} roughness={0.4} />
+        </mesh>
+        <mesh position={[-0.17, 0.05, 0.02]}>
+          <planeGeometry args={[0.12, 0.09]} />
+          <meshBasicMaterial color="#ffb547" />
+        </mesh>
+        <Label show={active} position={[-0.25, 0.5, 0]}>pay on arrival · Stripe</Label>
+      </group>
+      <Label show={active} position={[0.3, 0.9, 0.5]}>Socket.IO · live location</Label>
+    </group>
+  );
+}
+
+/* 06 — AzloTV: a TV resumes an episode, posters circle in a carousel, reels swipe up on a phone. */
+const POSTERS = ["#ff4d6d", "#4cc2ff", "#ffb547", "#b48cff", "#3ddc97", "#ff8a3d", "#e9edf3", "#4cc2ff"];
+
+function TvStation({ index, cursorRef, reduced, active }: StationProps) {
+  const carousel = useRef<THREE.Group>(null);
+  const bar = useRef<THREE.Mesh>(null);
+  const reels = useRef<(THREE.Mesh | null)[]>([]);
+  const reelMats = useRef<(THREE.MeshStandardMaterial | null)[]>([]);
+  const colors = useMemo(() => POSTERS.map((c) => new THREE.Color(c)), []);
+  const TV_W = 2.5;
+
+  useFrame(({ clock }) => {
+    const t = reduced ? 2 : clock.elapsedTime;
+    const f = focusOf(cursorRef.current, index);
+    if (carousel.current) {
+      carousel.current.rotation.y = t * 0.22;
+      carousel.current.scale.setScalar(0.6 + 0.4 * f);
+    }
+    if (bar.current) {
+      // Playback resumes at 35% (the saved position) and runs to the end.
+      const w = 0.35 + ((t * 0.05) % 1) * 0.65;
+      bar.current.scale.x = w;
+      bar.current.position.x = -TV_W / 2 + (TV_W * w) / 2;
+    }
+    // Reels: every few seconds the current reel swipes up and the next slides in.
+    const cycle = t * 0.3;
+    const phase = cycle % 1;
+    const s = THREE.MathUtils.smoothstep(phase, 0.7, 1);
+    const n = Math.floor(cycle);
+    reels.current.forEach((m, k) => {
+      if (!m) return;
+      m.position.y = k === 0 ? s * 0.95 : -0.95 + s * 0.95;
+      const mat = reelMats.current[k];
+      if (mat) {
+        mat.opacity = k === 0 ? 1 - s : s;
+        mat.color.copy(colors[(n + k) % colors.length]);
+        mat.emissive.copy(mat.color);
+      }
+    });
+  });
+
+  return (
+    <group rotation={[0.12, 0, 0]}>
+      <group position={[-0.4, 0.75, -0.6]}>
+        <mesh>
+          <boxGeometry args={[TV_W + 0.12, 1.5, 0.08]} />
+          <meshStandardMaterial color="#14171f" metalness={0.5} roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 0.03, 0.045]}>
+          <planeGeometry args={[TV_W, 1.36]} />
+          <meshBasicMaterial color="#0d2236" />
+        </mesh>
+        <mesh position={[0.05, 0.08, 0.05]}>
+          <circleGeometry args={[0.28, 3]} />
+          <meshBasicMaterial color="#e9edf3" transparent opacity={0.85} />
+        </mesh>
+        <mesh position={[0, -0.6, 0.05]}>
+          <planeGeometry args={[TV_W, 0.04]} />
+          <meshBasicMaterial color="#2b3546" />
+        </mesh>
+        <mesh ref={bar} position={[0, -0.6, 0.055]}>
+          <planeGeometry args={[TV_W, 0.04]} />
+          <meshBasicMaterial color={RED} />
+        </mesh>
+        <mesh position={[-TV_W / 2 + TV_W * 0.35, -0.6, 0.06]}>
+          <circleGeometry args={[0.045, 16]} />
+          <meshBasicMaterial color="#e9edf3" />
+        </mesh>
+        <Label show={active} position={[-TV_W / 2 + TV_W * 0.35, -0.85, 0]}>resume where you stopped</Label>
+        <Label show={active} position={[0, 1.0, 0]}>series · season & episode</Label>
+      </group>
+
+      <group ref={carousel} position={[-0.4, -0.75, 0.2]}>
+        {POSTERS.map((c, k) => {
+          const a = (k / POSTERS.length) * Math.PI * 2;
+          return (
+            <mesh key={k} position={[Math.sin(a) * 1.55, 0, Math.cos(a) * 1.55]} rotation={[0, a, 0]}>
+              <boxGeometry args={[0.42, 0.62, 0.02]} />
+              <meshStandardMaterial color={c} emissive={c} emissiveIntensity={0.25} transparent opacity={0.85} />
+            </mesh>
+          );
+        })}
+      </group>
+
+      <group position={[1.85, 0.1, 0.5]} rotation={[0, -0.35, 0]}>
+        <mesh>
+          <boxGeometry args={[0.62, 1.2, 0.05]} />
+          <meshStandardMaterial color="#14171f" metalness={0.5} roughness={0.3} />
+        </mesh>
+        {[0, 1].map((k) => (
+          <mesh key={k} ref={(m) => { reels.current[k] = m; }} position={[0, 0, 0.03 + k * 0.002]}>
+            <planeGeometry args={[0.52, 0.9]} />
+            <meshStandardMaterial ref={(m) => { reelMats.current[k] = m; }} color="#4cc2ff" emissiveIntensity={0.3} transparent />
+          </mesh>
+        ))}
+        <Label show={active} position={[0, 0.85, 0]}>reels feed</Label>
+        <Label show={active} position={[-0.3, -0.85, 0]}>live search · Socket.IO</Label>
+      </group>
+    </group>
+  );
+}
+
+/* 07 — CosmoQuest: planets orbit a star; the ones inside the habitable zone glow green. */
+const HZ = [1.2, 1.75];
+const ORBITS = [
+  { r: 0.8, size: 0.08 },
+  { r: 1.35, size: 0.12 },
+  { r: 1.62, size: 0.1 },
+  { r: 2.15, size: 0.16 },
+  { r: 2.6, size: 0.13 },
+];
+
+function CosmoStation({ index, cursorRef, reduced, active }: StationProps) {
+  const planets = useRef<(THREE.Mesh | null)[]>([]);
+  const band = useRef<THREE.MeshBasicMaterial>(null);
+  const halo = useRef<THREE.Mesh>(null);
+  const podium = useRef<(THREE.Mesh | null)[]>([]);
+  const orbitLines = useMemo(
+    () =>
+      ORBITS.map(({ r }) =>
+        Array.from({ length: 65 }, (_, i) => {
+          const a = (i / 64) * Math.PI * 2;
+          return new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r);
+        }),
+      ),
+    [],
+  );
+
+  useFrame(({ clock }) => {
+    const t = reduced ? 4 : clock.elapsedTime;
+    const f = focusOf(cursorRef.current, index);
+    planets.current.forEach((m, k) => {
+      if (!m) return;
+      const { r } = ORBITS[k];
+      const a = t * 0.9 * Math.pow(r, -1.5) + k * 1.7; // inner planets orbit faster
+      m.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+    });
+    if (band.current) band.current.opacity = 0.08 + 0.2 * f;
+    if (halo.current) halo.current.scale.setScalar(1 + Math.sin(t * 2) * 0.05);
+    podium.current.forEach((m, k) => {
+      if (!m) return;
+      const h = [0.75, 1.05, 0.55][k] * (0.25 + 0.75 * f);
+      m.scale.y = h;
+      m.position.y = h / 2;
+    });
+  });
+
+  return (
+    <group>
+      <group rotation={[0.5, 0, -0.08]}>
+        <mesh>
+          <sphereGeometry args={[0.38, 32, 32]} />
+          <meshStandardMaterial color="#ffb547" emissive="#ff8a3d" emissiveIntensity={1.4} />
+        </mesh>
+        <mesh ref={halo}>
+          <sphereGeometry args={[0.6, 32, 32]} />
+          <meshBasicMaterial color="#ffb547" transparent opacity={0.12} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[HZ[0], HZ[1], 96]} />
+          <meshBasicMaterial ref={band} color={GREEN} transparent opacity={0.2} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </mesh>
+        {orbitLines.map((pts, k) => (
+          <Line key={k} points={pts} color="#2b3546" lineWidth={1} />
+        ))}
+        {ORBITS.map(({ r, size }, k) => {
+          const habitable = r >= HZ[0] && r <= HZ[1];
+          return (
+            <mesh key={k} ref={(m) => { planets.current[k] = m; }}>
+              <sphereGeometry args={[size, 24, 24]} />
+              <meshStandardMaterial
+                color={habitable ? GREEN : "#8fa6c9"}
+                emissive={habitable ? GREEN : "#1d2633"}
+                emissiveIntensity={habitable ? 0.7 : 0.2}
+              />
+            </mesh>
+          );
+        })}
+        <Label show={active} position={[HZ[1] + 0.1, 0, 0.6]}>habitable zone</Label>
+        <Label show={active} position={[0, 0.75, 0]}>Exoplanet Archive · live</Label>
+      </group>
+
+      <group position={[-2.7, 1.25, 0.2]} rotation={[0, 0.35, 0.04]}>
+        <mesh>
+          <boxGeometry args={[1.05, 0.75, 0.04]} />
+          <meshStandardMaterial color="#e9edf3" />
+        </mesh>
+        <mesh position={[0, 0, 0.025]}>
+          <planeGeometry args={[0.95, 0.65]} />
+          <meshBasicMaterial color="#1b1640" />
+        </mesh>
+        <mesh position={[0.15, 0.06, 0.03]}>
+          <circleGeometry args={[0.2, 32]} />
+          <meshBasicMaterial color="#ff8a4c" />
+        </mesh>
+        <mesh position={[-0.25, -0.15, 0.03]}>
+          <circleGeometry args={[0.07, 24]} />
+          <meshBasicMaterial color="#8fa6c9" />
+        </mesh>
+        <Label show={active} position={[0, 0.6, 0]}>NASA APOD</Label>
+      </group>
+
+      <group position={[1.95, -1.35, 1.0]} rotation={[0.1, -0.4, 0]} scale={0.85}>
+        {[-0.34, 0, 0.34].map((x, k) => (
+          <mesh key={x} ref={(m) => { podium.current[k] = m; }} position={[x, 0, 0]}>
+            <boxGeometry args={[0.3, 1, 0.3]} />
+            <meshStandardMaterial color={[BLUE, AMBER, VIOLET][k]} emissive={[BLUE, AMBER, VIOLET][k]} emissiveIntensity={0.3} />
+          </mesh>
+        ))}
+        <Label show={active} position={[-0.4, -0.3, 0.3]}>quizzes · leaderboards</Label>
+      </group>
+    </group>
+  );
+}
+
+/* 08 — NestJS backend: 25 modules under a rotating auth guard. */
 function BackendStation({ index, cursorRef, reduced, active }: StationProps) {
   const group = useRef<THREE.Group>(null);
   const ring = useRef<THREE.Mesh>(null);
@@ -488,7 +988,125 @@ function BackendStation({ index, cursorRef, reduced, active }: StationProps) {
   );
 }
 
-/* 05 — Media pipeline: upload → queue → ffmpeg → four HLS renditions. */
+/* 09 — ML security (thesis): packets → flow features → Random Forest → benign or attack alert. */
+const SEC_PACKETS = 16;
+const GREEN = "#3ddc97";
+
+function SecurityStation({ index, cursorRef, reduced, active }: StationProps) {
+  const packets = useRef<(THREE.Mesh | null)[]>([]);
+  const columns = useRef<(THREE.Mesh | null)[]>([]);
+  const alarm = useRef<THREE.Mesh>(null);
+  const alarmMat = useRef<THREE.MeshStandardMaterial>(null);
+  const trees = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, k) => {
+        const a = (k / 7) * Math.PI * 2;
+        const r = k ? 0.42 : 0;
+        return { x: 0.7 + Math.cos(a) * r, z: Math.sin(a) * r, h: 0.55 + ((k * 5) % 3) * 0.12 };
+      }),
+    [],
+  );
+  const v = useMemo(
+    () => ({
+      white: new THREE.Color("#e9edf3"),
+      green: new THREE.Color(GREEN),
+      red: new THREE.Color(RED),
+      p: new THREE.Vector3(),
+      a: new THREE.Vector3(),
+      b: new THREE.Vector3(),
+      extractor: new THREE.Vector3(-1.2, 0, 0),
+      forest: new THREE.Vector3(0.7, 0.2, 0),
+      benign: new THREE.Vector3(2.7, 0.75, 0),
+      attack: new THREE.Vector3(2.7, -0.75, 0),
+    }),
+    [],
+  );
+
+  useFrame(({ clock }) => {
+    const t = reduced ? 0.5 : clock.elapsedTime;
+    const f = focusOf(cursorRef.current, index);
+    let alert = 0;
+    packets.current.forEach((m, k) => {
+      if (!m) return;
+      const isAttack = k % 4 === 1 || k % 7 === 3;
+      const u = (t * 0.16 + k / SEC_PACKETS) % 1;
+      const lane = ((k % 3) - 1) * 0.35;
+      if (u < 0.35) {
+        v.a.set(-3.1, lane, 0);
+        m.position.lerpVectors(v.a, v.extractor, u / 0.35);
+      } else if (u < 0.65) {
+        m.position.lerpVectors(v.extractor, v.forest, (u - 0.35) / 0.3);
+      } else {
+        const w = (u - 0.65) / 0.35;
+        m.position.lerpVectors(v.forest, isAttack ? v.attack : v.benign, w);
+        if (isAttack && w > 0.85) alert = Math.max(alert, (w - 0.85) / 0.15);
+      }
+      const mat = m.material as THREE.MeshBasicMaterial;
+      mat.color.copy(u < 0.65 ? v.white : isAttack ? v.red : v.green);
+      m.visible = f > 0.05;
+    });
+    columns.current.forEach((m, k) => {
+      if (m) m.scale.y = 0.35 + Math.abs(Math.sin(t * 2 + k * 0.9)) * 0.65 * (0.3 + 0.7 * f);
+    });
+    if (alarm.current) {
+      alarm.current.rotation.y = t * 0.8;
+      alarm.current.scale.setScalar(1 + alert * 0.45);
+    }
+    if (alarmMat.current) alarmMat.current.emissiveIntensity = 0.3 + alert * 2.2;
+  });
+
+  return (
+    <group position={[-0.45, 0, 0]} rotation={[0.1, -0.2, 0]} scale={0.88}>
+      {[-0.35, 0, 0.35].map((y) => (
+        <Line key={y} points={[[-3.1, y, 0], [-1.6, y, 0]]} color="#2b3546" lineWidth={1} />
+      ))}
+      <mesh position={v.extractor}>
+        <boxGeometry args={[0.8, 1.3, 0.5]} />
+        <meshStandardMaterial color="#121722" transparent opacity={0.6} />
+        <Edges color={RED} />
+      </mesh>
+      {Array.from({ length: 6 }, (_, k) => (
+        <mesh key={k} ref={(m) => { columns.current[k] = m; }} position={[-1.45 + k * 0.1, 0, 0.26]}>
+          <boxGeometry args={[0.05, 1, 0.02]} />
+          <meshBasicMaterial color={RED} transparent opacity={0.85} />
+        </mesh>
+      ))}
+      {trees.map((tr, k) => (
+        <group key={k} position={[tr.x, -0.45, tr.z]}>
+          <mesh position={[0, 0.12, 0]}>
+            <cylinderGeometry args={[0.03, 0.03, 0.24, 6]} />
+            <meshStandardMaterial color="#6b5a48" />
+          </mesh>
+          <mesh position={[0, 0.24 + tr.h / 2, 0]}>
+            <coneGeometry args={[0.18, tr.h, 7]} />
+            <meshStandardMaterial color="#2e8a62" emissive={GREEN} emissiveIntensity={0.15} flatShading />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={v.benign} rotation={[0, Math.PI / 2, 0]}>
+        <torusGeometry args={[0.32, 0.03, 8, 40]} />
+        <meshStandardMaterial color={GREEN} emissive={GREEN} emissiveIntensity={0.5} />
+      </mesh>
+      <mesh ref={alarm} position={v.attack}>
+        <octahedronGeometry args={[0.28, 0]} />
+        <meshStandardMaterial ref={alarmMat} color={RED} emissive={RED} emissiveIntensity={0.3} flatShading />
+      </mesh>
+      {Array.from({ length: SEC_PACKETS }, (_, k) => (
+        <mesh key={k} ref={(m) => { packets.current[k] = m; }}>
+          <sphereGeometry args={[0.055, 10, 10]} />
+          <meshBasicMaterial color="#e9edf3" />
+        </mesh>
+      ))}
+      <Label show={active} position={[-2.6, 0.75, 0]}>live packets · Scapy</Label>
+      <Label show={active} position={[-1.2, 0.95, 0]}>78 flow features</Label>
+      <Label show={active} position={[0.7, 0.75, 0]}>Random Forest</Label>
+      <Label show={active} position={[2.7, 1.25, 0]}>BENIGN</Label>
+      <Label show={active} position={[2.7, -1.25, 0]}>attack → alert</Label>
+    </group>
+  );
+}
+
+/* 10 — Media pipeline: upload → queue → ffmpeg → four HLS renditions. */
 function StreamingStation({ index, cursorRef, reduced, active }: StationProps) {
   const jobs = useRef<(THREE.Mesh | null)[]>([]);
   const core = useRef<THREE.Mesh>(null);
@@ -547,7 +1165,7 @@ function StreamingStation({ index, cursorRef, reduced, active }: StationProps) {
   );
 }
 
-/* 06 — Release: a build travels through CI gates to the stores. */
+/* 11 — Release: a build travels through CI gates to the stores. */
 function ReleaseStation({ index, cursorRef, reduced, active }: StationProps) {
   const capsule = useRef<THREE.Mesh>(null);
   const gates = useRef<(THREE.MeshStandardMaterial | null)[]>([]);
@@ -591,7 +1209,7 @@ function ReleaseStation({ index, cursorRef, reduced, active }: StationProps) {
   );
 }
 
-/* 07 — Hardware: the waiter robot, built from the real blueprint (inches), assembling as you arrive. */
+/* 12 — Hardware: the waiter robot, built from the real blueprint (inches), assembling as you arrive. */
 const INCH = 0.3;
 
 function chassisShape() {
@@ -770,7 +1388,7 @@ function HardwareStation({ index, cursorRef, reduced, active }: StationProps) {
   );
 }
 
-/* 08 — Design: a poster splits into its layers over the golden-ratio grid it was composed on. */
+/* 13 — Design: a poster splits into its layers over the golden-ratio grid it was composed on. */
 const PHI = (1 + Math.sqrt(5)) / 2;
 
 function goldenGrid(height: number) {
@@ -885,7 +1503,91 @@ function DesignStation({ index, cursorRef, reduced, active }: StationProps) {
   );
 }
 
-/* 09 — Leadership: a lead node with 14 engineers in orbit. */
+/* Firebase: a flame core wired to six services; pulses flow between them and the phone. */
+const FIREBASE_SERVICES = ["Auth", "Firestore", "FCM", "Functions", "Crashlytics", "Analytics"];
+
+function FirebaseStation({ index, cursorRef, reduced, active }: StationProps) {
+  const flame = useRef<THREE.Group>(null);
+  const nodes = useRef<(THREE.Group | null)[]>([]);
+  const pulses = useRef<(THREE.Mesh | null)[]>([]);
+  const phone = useMemo(() => new THREE.Vector3(-2.05, -1.35, 0.9), []);
+  const spots = useMemo(
+    () =>
+      FIREBASE_SERVICES.map((_, k) => {
+        const a = (k / FIREBASE_SERVICES.length) * Math.PI * 2 + Math.PI / 2;
+        return new THREE.Vector3(Math.cos(a) * 1.9, Math.sin(a) * 1.15, Math.sin(a) * 0.4);
+      }),
+    [],
+  );
+
+  useFrame(({ clock }) => {
+    const t = reduced ? 1 : clock.elapsedTime;
+    const f = focusOf(cursorRef.current, index);
+    if (flame.current) {
+      flame.current.scale.set(1, 0.92 + Math.sin(t * 5) * 0.06, 1);
+      flame.current.rotation.y = t * 0.6;
+    }
+    nodes.current.forEach((g, k) => {
+      if (!g) return;
+      const r = 0.45 + 0.55 * f;
+      g.position.copy(spots[k]).multiplyScalar(r);
+      g.position.y += Math.sin(t * 1.3 + k) * 0.06;
+    });
+    pulses.current.forEach((m, k) => {
+      if (!m) return;
+      // Even pulses: core → a service. Odd pulses (FCM): core → the phone.
+      const u = (t * 0.5 + k / pulses.current.length) % 1;
+      const to = k % 2 ? phone : nodes.current[(k * 2) % FIREBASE_SERVICES.length]?.position ?? phone;
+      m.position.set(0, 0.2, 0).lerp(to, u);
+      m.visible = f > 0.2;
+    });
+  });
+
+  return (
+    <group rotation={[0.15, 0, 0]}>
+      <group ref={flame}>
+        {[
+          { r: 0.5, h: 1.2, c: "#ffb547" },
+          { r: 0.36, h: 0.95, c: "#ff8a3d" },
+          { r: 0.22, h: 0.7, c: "#ff4d6d" },
+        ].map(({ r, h, c }, k) => (
+          <mesh key={k} position={[0, h / 2 - 0.4, k * 0.05]}>
+            <coneGeometry args={[r, h, 6]} />
+            <meshStandardMaterial color={c} emissive={c} emissiveIntensity={0.7} flatShading />
+          </mesh>
+        ))}
+      </group>
+      {FIREBASE_SERVICES.map((name, k) => (
+        <group key={name} ref={(g) => { nodes.current[k] = g; }}>
+          <mesh>
+            <octahedronGeometry args={[0.16, 0]} />
+            <meshStandardMaterial color={AMBER} emissive={AMBER} emissiveIntensity={0.45} flatShading />
+          </mesh>
+          <Label show={active} position={[0, k === 0 ? 0.35 : -0.35, 0]}>{name}</Label>
+        </group>
+      ))}
+      {Array.from({ length: 6 }, (_, k) => (
+        <mesh key={k} ref={(m) => { pulses.current[k] = m; }}>
+          <sphereGeometry args={[0.045, 10, 10]} />
+          <meshBasicMaterial color={k % 2 ? BLUE : "#ffd23d"} />
+        </mesh>
+      ))}
+      <group position={phone} rotation={[0, 0.4, 0]}>
+        <mesh>
+          <boxGeometry args={[0.5, 0.95, 0.05]} />
+          <meshStandardMaterial color="#14171f" metalness={0.5} roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 0.3, 0.03]}>
+          <planeGeometry args={[0.4, 0.14]} />
+          <meshBasicMaterial color={BLUE} transparent opacity={0.8} />
+        </mesh>
+        <Label show={active} position={[0, -0.7, 0]}>push · live sync</Label>
+      </group>
+    </group>
+  );
+}
+
+/* 14 — Leadership: a lead node with 14 engineers in orbit. */
 function TeamStation({ index, cursorRef, reduced, active }: StationProps) {
   const lead = useRef<THREE.Mesh>(null);
   const nodes = useRef<(THREE.Mesh | null)[]>([]);
@@ -932,24 +1634,33 @@ function TeamStation({ index, cursorRef, reduced, active }: StationProps) {
   );
 }
 
-const STATION_COMPONENTS = [
-  PhoneStation,
-  ArchitectureStation,
-  GeoStation,
-  BackendStation,
-  StreamingStation,
-  ReleaseStation,
-  HardwareStation,
-  DesignStation,
-  TeamStation,
-];
+// 3D scene for each tour entry, keyed by its id in content.ts.
+const STATION_REGISTRY: Record<string, (props: StationProps) => React.JSX.Element> = {
+  flutter: PhoneStation,
+  architecture: ArchitectureStation,
+  backend: BackendStation,
+  firebase: FirebaseStation,
+  release: ReleaseStation,
+  design: DesignStation,
+  team: TeamStation,
+  streaming: StreamingStation,
+  exodus: TransitStation,
+  azlotv: TvStation,
+  "offline-geo": GeoStation,
+  couplio: CoupleStation,
+  cosmoquest: CosmoStation,
+  hardware: HardwareStation,
+  "ml-security": SecurityStation,
+};
 
 export default function JourneyScene({
+  ids,
   progressRef,
   active,
   running,
   reduced,
 }: {
+  ids: string[];
   progressRef: RefObject<number>;
   active: number;
   running: boolean;
@@ -957,6 +1668,7 @@ export default function JourneyScene({
 }) {
   const cursorRef = useRef(0);
   const layerRef = useRef<HTMLDivElement>(null);
+  const stations = useMemo(() => stationPositions(ids.length), [ids.length]);
 
   return (
     <div className="relative h-full w-full">
@@ -973,13 +1685,16 @@ export default function JourneyScene({
           <hemisphereLight args={["#9fd8ff", "#1a0b10", 0.5]} />
           <directionalLight position={[5, 8, 6]} intensity={1.3} />
           <Stars radius={80} depth={40} count={1400} factor={3} fade speed={reduced ? 0 : 0.4} />
-          <Rig progressRef={progressRef} cursorRef={cursorRef} reduced={reduced} />
-          <Path reduced={reduced} />
-          {STATION_COMPONENTS.map((Station, i) => (
-            <group key={i} position={STATIONS[i]}>
-              <Station index={i} cursorRef={cursorRef} reduced={reduced} active={active === i} />
-            </group>
-          ))}
+          <Rig stations={stations} progressRef={progressRef} cursorRef={cursorRef} reduced={reduced} />
+          <Path stations={stations} reduced={reduced} />
+          {ids.map((id, i) => {
+            const Station = STATION_REGISTRY[id];
+            return Station ? (
+              <group key={id} position={stations[i]}>
+                <Station index={i} cursorRef={cursorRef} reduced={reduced} active={active === i} />
+              </group>
+            ) : null;
+          })}
         </Canvas>
       </LabelLayer>
       <div ref={layerRef} className="pointer-events-none absolute inset-0 overflow-hidden" />
