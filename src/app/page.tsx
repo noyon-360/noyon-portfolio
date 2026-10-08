@@ -6,6 +6,7 @@ import ExpertiseJourney from "@/components/ExpertiseJourney";
 import Faq from "@/components/Faq";
 import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
+import Intro from "@/components/Intro";
 import Navbar from "@/components/Navbar";
 import Projects from "@/components/Projects";
 import Skills from "@/components/Skills";
@@ -18,6 +19,7 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
+        <Intro />
         <ExpertiseJourney id="skills" index="02" title="Skills in 3D" entries={skillTour} />
         <Skills />
         <ExpertiseJourney id="projects" index="04" title="Projects in 3D" entries={projectTour} />

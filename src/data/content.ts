@@ -1,13 +1,5 @@
 import type { CraftArtId } from "@/components/CraftArt";
 
-// The hero reveals the summary one part per scroll step; everywhere else uses the joined sentence.
-export const summaryParts = [
-  "Senior software engineer with 35+ cross-platform apps shipped to Google Play and the App Store,",
-  "working full-stack across the Flutter client and NestJS/Firebase backends.",
-  "Comfortable owning a feature from architecture to release —",
-  "Clean Architecture, state management, media streaming, payments, and CI/CD.",
-];
-
 export const profile = {
   name: "Nazibullah Noyon",
   shortName: "Noyon",
@@ -19,12 +11,29 @@ export const profile = {
   timeZone: "Asia/Dhaka",
   email: "nazibullahnoyon19.20@gmail.com",
   phone: "+8801305223046",
-  summary: summaryParts.join(" "),
+  summary:
+    "Senior software engineer with 35+ cross-platform apps shipped to Google Play and the App Store, working full-stack across the Flutter client and NestJS/Firebase backends. Comfortable owning a feature from architecture to release — Clean Architecture, state management, media streaming, payments, and CI/CD.",
   // Drop the PDF into /public with this name to enable the download button.
   cv: "/Nazibullah_Noyon_CV.pdf",
   // Square headshot shown beside the name in the navbar; initials show until the file exists.
   photo: "/avatar.jpg",
   socials: [{ label: "GitHub", href: "https://github.com/noyon-360" }],
+};
+
+// The Intro section's take on the summary: short statements that fill in as you scroll, then the
+// toolkit as tags. `accents` fill in a colour instead of the text colour.
+export const intro = {
+  lines: [
+    "Senior software engineer with 35+ cross-platform apps shipped to Google Play and the App Store.",
+    "Full-stack across the Flutter client and the NestJS/Firebase backend behind it.",
+    "I own features end to end, from architecture to release.",
+  ],
+  accents: [
+    { text: "35+ cross-platform apps", className: "font-semibold text-text" },
+    { text: "Flutter client", className: "text-client" },
+    { text: "NestJS/Firebase backend", className: "text-server" },
+  ],
+  toolkit: ["Clean Architecture", "State management", "Media streaming", "Payments", "CI/CD"],
 };
 
 export const stats = [

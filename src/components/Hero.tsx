@@ -1,109 +1,36 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState, type CSSProperties } from "react";
-import { profile, stats, summaryParts } from "@/data/content";
+import { Fragment, useEffect, useState, type CSSProperties } from "react";
+import { profile, stats } from "@/data/content";
 
-// Steps: three headline lines, the name line, one per summary part, then the proof (CTAs + stats).
-const summaryLabels = ["Shipped", "Full-stack", "Ownership", "Toolkit"];
-const steps = [
-  "The app",
-  "The server",
-  "Behind it",
-  "Who I am",
-  ...summaryParts.map((_, i) => summaryLabels[i] ?? `Part ${i + 1}`),
-  "Proof",
-];
+// The intro plays on its own once the page loads: each headline line flips up, the name line types
+// out, then the CTAs and stats land. Delays (ms) are measured from when the intro wipe clears.
 const NAME = 3;
-const SUMMARY = 4;
-const PROOF = SUMMARY + summaryParts.length;
-const last = steps.length - 1;
+const PROOF = 4;
+const timeline = [0, 380, 760, 1250, 2350];
 
-// Each headline line is one scroll step; the accent word gets its colour and a drawn underline.
+// Each headline line is one beat; the accent word gets its colour and a drawn underline.
 const lines: { words: string[]; accent?: { word: string; className: string } }[] = [
   { words: ["I", "build", "the", "app"], accent: { word: "app", className: "text-client" } },
   { words: ["and", "the", "server"], accent: { word: "server", className: "text-server" } },
   { words: ["behind", "it."] },
 ];
 
-// Phrases in the summary that skimmers should catch.
-const keyTerms = ["35+ cross-platform apps", "Flutter", "NestJS/Firebase"];
-const termPattern = new RegExp(`(${keyTerms.map((t) => t.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")).join("|")})`);
-
-// A pinned intro: each scroll step reveals the next part of the pitch, then the next section slides
-// over the scaled-back hero. When the hero can't fit one screen (small phones) it unpins and each
-// part reveals as it scrolls into view instead.
 export default function Hero() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const dimRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0);
-  const [pinned, setPinned] = useState(true);
+  const [active, setActive] = useState(-1);
   const [reduced, setReduced] = useState(false);
-  const [ready, setReady] = useState(false);
   const [clock, setClock] = useState<string | null>(null);
   const [month, setMonth] = useState<string | null>(null);
 
   useEffect(() => {
-    const section = sectionRef.current;
-    const content = contentRef.current;
-    if (!section || !content) return;
-
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let pin = true;
-    let width = 0;
-
-    const onScroll = () => {
-      const stage = stageRef.current;
-      const dim = dimRef.current;
-      if (pin) {
-        // The last 100svh of the section is the hand-off, while the next section slides over.
-        const r = section.getBoundingClientRect();
-        const vh = window.innerHeight;
-        const span = r.height - 2 * vh;
-        const p = Math.min(1, Math.max(0, -r.top / span));
-        const h = Math.min(1, Math.max(0, (-r.top - span) / vh));
-        setActive(Math.round(p * last));
-        if (stage) stage.style.transform = h ? `scale(${1 - 0.06 * h})` : "";
-        if (dim) dim.style.opacity = String(h * 0.7);
-        return;
-      }
-      if (stage) stage.style.transform = "";
-      if (dim) dim.style.opacity = "0";
-      let a = 0;
-      content.querySelectorAll<HTMLElement>("[data-step]").forEach((m) => {
-        if (m.getBoundingClientRect().top < window.innerHeight * 0.85) a = Math.max(a, Number(m.dataset.step));
-      });
-      setActive(a);
-    };
-
-    const measure = (force = false) => {
-      // Mobile toolbars resize the viewport while scrolling; only re-decide pinning on width changes.
-      if (!force && window.innerWidth === width) return onScroll();
-      width = window.innerWidth;
-      pin = !mq.matches && content.offsetHeight <= window.innerHeight;
-      setPinned(pin);
-      setReduced(mq.matches);
-      onScroll();
-    };
-    const onResize = () => measure();
-    const onMotion = () => measure(true);
-
-    measure(true);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    mq.addEventListener("change", onMotion);
-
-    // Hold the first reveal until the intro wipe has cleared (see src/lib/intro.ts).
+    const isReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Wait for the intro wipe to clear (see src/lib/intro.ts); reduced motion shows everything at once.
     const seen = document.documentElement.dataset.intro === "seen";
-    const readyTimer = window.setTimeout(() => setReady(true), seen ? 0 : 900);
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-      mq.removeEventListener("change", onMotion);
-      window.clearTimeout(readyTimer);
-    };
+    const start = seen ? 100 : 900;
+    const timers = isReduced
+      ? [window.setTimeout(() => (setReduced(true), setActive(PROOF)), 0)]
+      : timeline.map((t, i) => window.setTimeout(() => setActive(i), start + t));
+    return () => timers.forEach((t) => window.clearTimeout(t));
   }, []);
 
   // Live local time in Gazipur, plus the current month for the availability pill.
@@ -123,36 +50,20 @@ export default function Hero() {
     };
   }, []);
 
-  function goTo(i: number) {
-    const el = sectionRef.current;
-    if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: top + (i / last) * (el.offsetHeight - 2 * window.innerHeight), behavior: "smooth" });
-  }
-
-  const pinMode = pinned && !reduced;
-  const shown = (i: number) => ready && (reduced || active >= i);
+  const shown = (i: number) => active >= i;
   const block = (i: number, spring = false) =>
     `transition-all duration-700 ${spring ? "ease-[cubic-bezier(0.34,1.4,0.64,1)]" : "ease-out"} ${
       shown(i) ? "translate-y-0 opacity-100" : `pointer-events-none opacity-0 ${spring ? "translate-y-10" : "translate-y-6"}`
     }`;
 
   return (
-    <section
-      id="top"
-      ref={sectionRef}
-      className="relative"
-      style={pinMode ? { height: `${steps.length * 50 + 200}svh`, marginBottom: "-100svh" } : undefined}
-    >
+    <section id="top" className="relative">
       <div className="intro-wipe" aria-hidden="true">
         <span className="font-mono text-sm font-semibold tracking-[0.3em]">NN</span>
         <span className="intro-bar" />
       </div>
 
-      <div
-        ref={stageRef}
-        className={`${pinMode ? "sticky top-0 h-svh" : "min-h-svh"} relative flex origin-[50%_30%] items-center overflow-hidden`}
-      >
+      <div className="relative flex min-h-svh items-center overflow-hidden">
         <div className="grid-bg pointer-events-none absolute inset-0" aria-hidden="true" />
         <div className="pointer-events-none absolute -left-40 top-10 h-[28rem] w-[28rem] rounded-full bg-client/15 blur-3xl" aria-hidden="true" />
         <div
@@ -162,7 +73,7 @@ export default function Hero() {
           aria-hidden="true"
         />
 
-        <div ref={contentRef} className="relative mx-auto w-full max-w-6xl px-4 pb-16 pt-28 sm:px-6">
+        <div className="relative mx-auto w-full max-w-6xl px-4 pb-16 pt-28 sm:px-6">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs uppercase tracking-[0.2em] text-muted">
             <span className="slide-in text-text">01</span>
             <span className="slide-in" style={{ "--i": 1 } as CSSProperties}>
@@ -192,7 +103,7 @@ export default function Hero() {
 
           <h1 className="mt-8 font-display text-5xl font-medium leading-[0.95] tracking-[-0.03em] sm:text-7xl lg:text-[6rem]">
             {lines.map((l, li) => (
-              <span key={li} data-step={li} className="flip-line">
+              <span key={li} className="flip-line">
                 {l.words.map((w, wi) => (
                   <Fragment key={wi}>
                     {wi > 0 && " "}
@@ -209,27 +120,13 @@ export default function Hero() {
             ))}
           </h1>
 
-          <div data-step={NAME} className={block(NAME)}>
+          <div className={block(NAME)}>
             <p className="mt-8 font-mono text-sm text-text">
               <TypeOut text={`${profile.name} — ${profile.title} · ${profile.roles.join(" · ")}`} run={shown(NAME)} instant={reduced} />
             </p>
-            {/* One part lights up per step: the current part reads brightest, upcoming parts stay ghosted. */}
-            <p className="mt-4 max-w-2xl text-muted md:text-lg">
-              {summaryParts.map((part, i) => (
-                <Fragment key={i}>
-                  {i > 0 && " "}
-                  <span data-step={SUMMARY + i}>
-                    <SummaryPart
-                      text={part}
-                      state={!shown(SUMMARY + i) ? "next" : !reduced && active === SUMMARY + i ? "now" : "past"}
-                    />
-                  </span>
-                </Fragment>
-              ))}
-            </p>
           </div>
 
-          <div data-step={PROOF} inert={!shown(PROOF)}>
+          <div inert={!shown(PROOF)}>
             <div className={`mt-10 flex flex-wrap gap-3 ${block(PROOF, true)}`}>
               <a href="#skills" className="rounded-full bg-text px-6 py-3 font-medium text-ink transition-opacity hover:opacity-85">
                 Explore my skills in 3D ↓
@@ -259,64 +156,9 @@ export default function Hero() {
           </div>
         </div>
 
-        {pinMode && (
-          <div className="absolute inset-x-0 bottom-4 mx-auto flex max-w-6xl items-center gap-4 px-4 sm:px-6">
-            <nav aria-label="Intro steps" className="flex flex-1 gap-1.5">
-              {steps.map((label, i) => (
-                <button
-                  key={label}
-                  onClick={() => goTo(i)}
-                  aria-current={i === active ? "step" : undefined}
-                  aria-label={label}
-                  className="flex-1 py-2"
-                >
-                  <span className={`block h-0.5 rounded-full transition-colors duration-500 ${i <= active ? "bg-text" : "bg-line"}`} />
-                </button>
-              ))}
-            </nav>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted" aria-live="polite">
-              {active < last ? "Scroll ↓ " : ""}
-              <span className="text-text">{String(active + 1).padStart(2, "0")}</span> / {String(steps.length).padStart(2, "0")}
-            </span>
-          </div>
-        )}
-
-        {/* Darkens the hero as the next section slides over it. */}
-        <div ref={dimRef} className="pointer-events-none absolute inset-0 bg-ink opacity-0" aria-hidden="true" />
       </div>
     </section>
   );
-}
-
-// A summary part split into words that fade in one after another; key terms stay bold.
-function SummaryPart({ text, state }: { text: string; state: "next" | "now" | "past" }) {
-  const out = [];
-  let n = 0;
-  for (const [si, seg] of text.split(termPattern).entries()) {
-    const words = [];
-    for (const [ti, tok] of seg.split(/(\s+)/).entries()) {
-      if (!tok.trim()) {
-        words.push(tok);
-        continue;
-      }
-      words.push(
-        <span key={ti} data-state={state} className="reveal-word" style={{ transitionDelay: state === "next" ? "0ms" : `${n * 25}ms` }}>
-          {tok}
-        </span>,
-      );
-      n++;
-    }
-    out.push(
-      keyTerms.includes(seg) ? (
-        <strong key={si} className="font-medium text-text">
-          {words}
-        </strong>
-      ) : (
-        <Fragment key={si}>{words}</Fragment>
-      ),
-    );
-  }
-  return out;
 }
 
 // Types the line out character by character; the full text reserves its space so nothing reflows.
