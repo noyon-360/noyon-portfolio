@@ -9,6 +9,7 @@ import Hero from "@/components/Hero";
 import Navbar from "@/components/Navbar";
 import Projects from "@/components/Projects";
 import Skills from "@/components/Skills";
+import Terminal from "@/components/Terminal";
 import { projectTour, skillTour } from "@/data/content";
 
 export default function Home() {
@@ -24,6 +25,7 @@ export default function Home() {
         <Craft />
         <Experience />
         <ApiDemo />
+        <Terminal />
         <Faq />
         <Contact />
         {/* Signature sign-off hidden for now — re-enable by restoring <Signature /> here. */}

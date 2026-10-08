@@ -1,5 +1,13 @@
 import type { CraftArtId } from "@/components/CraftArt";
 
+// The hero reveals the summary one part per scroll step; everywhere else uses the joined sentence.
+export const summaryParts = [
+  "Senior software engineer with 35+ cross-platform apps shipped to Google Play and the App Store,",
+  "working full-stack across the Flutter client and NestJS/Firebase backends.",
+  "Comfortable owning a feature from architecture to release —",
+  "Clean Architecture, state management, media streaming, payments, and CI/CD.",
+];
+
 export const profile = {
   name: "Nazibullah Noyon",
   shortName: "Noyon",
@@ -7,10 +15,11 @@ export const profile = {
   roles: ["Full-Stack (Flutter + NestJS)", "Team Lead"],
   location: "Gazipur, Bangladesh",
   timezone: "UTC +06:00",
+  // IANA zone for the live clock in the hero.
+  timeZone: "Asia/Dhaka",
   email: "nazibullahnoyon19.20@gmail.com",
   phone: "+8801305223046",
-  summary:
-    "Senior software engineer with 35+ cross-platform apps shipped to Google Play and the App Store, working full-stack across the Flutter client and NestJS/Firebase backends. Comfortable owning a feature from architecture to release — Clean Architecture, state management, media streaming, payments, and CI/CD.",
+  summary: summaryParts.join(" "),
   // Drop the PDF into /public with this name to enable the download button.
   cv: "/Nazibullah_Noyon_CV.pdf",
   // Square headshot shown beside the name in the navbar; initials show until the file exists.

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { introBootScript } from "@/lib/intro";
 import { DEFAULT_THEME, themeBootScript, themeById } from "@/lib/themes";
 
 const geistSans = Geist({
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <script dangerouslySetInnerHTML={{ __html: introBootScript }} />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

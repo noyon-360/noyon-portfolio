@@ -18,7 +18,7 @@ export default function Contact() {
   }
 
   return (
-    <Section id="contact" index="10" eyebrow="Contact" title="Have an app to ship? Let's talk.">
+    <Section id="contact" index="11" eyebrow="Contact" title="Have an app to ship? Let's talk.">
       <div className="grid gap-10 lg:grid-cols-5">
         <div className="space-y-6 lg:col-span-2">
           <p className="text-muted md:text-lg">

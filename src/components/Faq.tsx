@@ -3,7 +3,7 @@ import { Section } from "./Section";
 
 export default function Faq() {
   return (
-    <Section id="faq" index="09" eyebrow="FAQ" title="Before you ask.">
+    <Section id="faq" index="10" eyebrow="FAQ" title="Before you ask.">
       <div className="divide-y divide-line border-y border-line">
         {faqs.map((f) => (
           <details key={f.q} className="group py-5">

@@ -202,3 +202,273 @@ body {
 :root[data-theme="cyberpunk"] .text-server {
   text-shadow: 0 0 16px currentColor;
 }
+
+/* ── Terminal window (Terminal.tsx): macOS Terminal chrome over the active theme ── */
+.term-window {
+  background: color-mix(in srgb, var(--color-ink) 92%, transparent);
+  backdrop-filter: blur(20px) saturate(1.4);
+}
+
+.term-titlebar {
+  background: linear-gradient(to bottom, #3a3a3c, #2c2c2e);
+}
+
+.term-font {
+  font-family: "SF Mono", ui-monospace, Menlo, Monaco, var(--font-geist-mono), monospace;
+  font-variant-ligatures: none;
+}
+
+.term-light {
+  display: grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.25);
+  color: rgb(0 0 0 / 0.6);
+}
+
+.term-light svg {
+  width: 7px;
+  height: 7px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  opacity: 0;
+}
+
+.group:hover .term-light svg,
+.term-light:focus-visible svg {
+  opacity: 1;
+}
+
+/* A non-breaking space stands in when the caret is at the end; a plain space would hang with zero width. */
+.term-cursor,
+.term-cursor-idle {
+  display: inline-block;
+  min-width: 1ch;
+  line-height: 1.2;
+  vertical-align: text-bottom;
+}
+
+.term-cursor {
+  background: var(--color-text);
+  color: var(--color-ink);
+  animation: term-blink 1.06s steps(1) infinite;
+}
+
+.term-cursor-idle {
+  outline: 1px solid color-mix(in srgb, var(--color-text) 70%, transparent);
+  outline-offset: -1px;
+}
+
+@keyframes term-blink {
+  50% {
+    background: transparent;
+    color: inherit;
+  }
+}
+
+.term-screen {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-text) 25%, transparent) transparent;
+}
+
+.term-screen::-webkit-scrollbar {
+  width: 8px;
+}
+
+.term-screen::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-text) 25%, transparent) padding-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .term-cursor {
+    animation: none;
+  }
+}
+
+/* Hero intro wipe — plays once per session (src/lib/intro.ts), then wipes up off the page. */
+:root {
+  --intro-delay: 0.9s;
+}
+
+:root[data-intro="seen"] {
+  --intro-delay: 0s;
+}
+
+.intro-wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: var(--color-client);
+  color: var(--color-ink);
+  pointer-events: none;
+  animation: intro-wipe 0.55s cubic-bezier(0.7, 0, 0.2, 1) 0.45s both;
+}
+
+.intro-bar {
+  width: 8rem;
+  height: 2px;
+  background: currentColor;
+  transform-origin: left;
+  animation: intro-bar 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+:root[data-intro="seen"] .intro-wipe {
+  display: none;
+}
+
+@keyframes intro-wipe {
+  from {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+  55% {
+    clip-path: polygon(0 0, 100% 0, 100% 35%, 0 65%);
+  }
+  to {
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+    visibility: hidden;
+  }
+}
+
+@keyframes intro-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Hero meta row: items slide in from the right once the intro clears. */
+.slide-in {
+  animation: slide-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--intro-delay) + var(--i, 0) * 70ms);
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+/* Hero headline: upcoming lines wait as flat, dim ghosts; each word flips up as its scroll step
+   arrives. Perspective is per word so the tilt never smears words sideways. */
+.flip-line {
+  display: block;
+}
+
+.flip-word {
+  display: inline-block;
+  transform-origin: 50% 100%;
+  transition: opacity 0.4s ease;
+}
+
+.flip-word[data-on="false"] {
+  opacity: 0.1;
+}
+
+.flip-word[data-on="true"] {
+  animation: word-flip 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes word-flip {
+  from {
+    opacity: 0.1;
+    transform: perspective(600px) translateY(0.3em) rotateX(-75deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 639px) {
+  @keyframes word-flip {
+    from {
+      opacity: 0.1;
+      transform: translateY(0.3em);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* "app" / "server" get an underline drawn left to right after the word lands. */
+.accent-mark {
+  position: relative;
+}
+
+.accent-mark::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0.02em;
+  height: 0.06em;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s;
+}
+
+.accent-mark[data-on="true"]::after {
+  transform: scaleX(1);
+}
+
+.type-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--color-text);
+  animation: term-blink 1.06s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-wipe {
+    display: none;
+  }
+  .flip-word[data-on="true"] {
+    animation: none;
+  }
+  .type-caret {
+    animation: none;
+  }
+}
+
+/* Hero summary: words of the current scroll step fade up; upcoming parts stay ghosted. */
+.reveal-word {
+  display: inline-block;
+  transition:
+    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    color 0.6s ease;
+}
+
+.reveal-word[data-state="next"] {
+  opacity: 0.15;
+  filter: blur(1.5px);
+  transform: translateY(0.25em);
+}
+
+.reveal-word[data-state="now"] {
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-word[data-state="next"] {
+    transform: none;
+    filter: none;
+  }
+}

@@ -9,6 +9,7 @@ const links = [
   ["Craft", "#craft"],
   ["Experience", "#experience"],
   ["API", "#api"],
+  ["Terminal", "#terminal"],
   ["Contact", "#contact"],
 ];
 
