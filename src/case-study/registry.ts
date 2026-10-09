@@ -1,7 +1,7 @@
 // Every case study listed on /case-study. To add one: create src/app/case-study/<slug>/page.tsx,
 // then add an entry here. Newest first is not enforced; the list renders in this order.
 
-export type CaseStudyAccent = "amber" | "signal" | "ivory" | "green" | "ice";
+export type CaseStudyAccent = "amber" | "signal" | "ivory" | "green" | "ice" | "violet";
 
 export type CaseStudyEntry = {
   /** URL segment: the page lives at /case-study/<slug>. Must match the folder name under src/app/case-study. */
@@ -21,6 +21,17 @@ export type CaseStudyEntry = {
 };
 
 export const caseStudies: CaseStudyEntry[] = [
+  {
+    slug: "academic-portal-disclosure",
+    title: "Knowing where to stop",
+    summary:
+      "An academic portal appeared to leave student records, admin pages and plaintext passwords within reach of the open web. A first-person account of confirming the problems, stopping, and disclosing them responsibly.",
+    period: "2026 · Identity withheld",
+    tags: ["Responsible disclosure", "Access control", "Ethics"],
+    accents: ["violet"],
+    coverLabels: ["Disclosure"],
+    scope: "10 questions · interactive 3D",
+  },
   {
     slug: "npm-supply-chain-attack",
     title: "One install command, four servers",

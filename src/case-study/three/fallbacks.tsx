@@ -1,10 +1,12 @@
 // Static SVG versions of every 3D object, shown on phones, under reduced motion, before 3D loads,
 // and to anyone without WebGL. Each one shows the object's end state. Decorative: the Stage carries alt text.
 import { c1Checklist, c1Shield, c2Pins, visualText } from "../content";
+import { portalVisual } from "../studies/academic-portal-disclosure";
 import { mongoCollections, mongoVisual } from "../studies/mongodb-ransomware-attack";
 import { npmShieldLayers, npmVisual } from "../studies/npm-supply-chain-attack";
 import { BD_CENTER, BD_OUTLINE, illustrativeDots } from "./bangladesh";
 import { DRUMS, LAYER_OFFSETS, LINE_END, LINE_EVENTS, LINE_START, SCANNERS, SESSION_X } from "./mongodb";
+import { DRAWERS, LETTER_LINES, LETTER_TARGETS, OPEN_AMOUNT, PATH_X, RECIPIENT_POS, RECORD_COUNT, RECORD_FIRST, REDACT, STOP_STAGE } from "./portal";
 import { NET_BAD, NET_EDGES, NET_NODES, SERVER_CELLS, SWITCH_COUNT, SWITCH_SUSPECT, TOWER_BLOCKS, TOWER_WORST, TREE, TREE_PATH } from "./npm";
 import { rng } from "./util";
 
@@ -881,6 +883,132 @@ export function HoleLayersSvg() {
       <line x1={40} y1={122} x2={360} y2={192} stroke={R} strokeWidth={3} />
       <text x={200} y={286} fontSize={8} fill={D} style={mono} textAnchor="middle">
         ILLUSTRATIVE
+      </text>
+    </Svg>
+  );
+}
+
+// ── Academic portal study ───────────────────────────────────────────────────
+
+const V = "var(--color-violet)";
+
+export function PathSvg() {
+  const { stages, recipients } = portalVisual.path;
+  const px = (x: number) => r2(200 + x * 50);
+  const py = (y: number) => r2(140 - y * 50);
+  const last = px(PATH_X[PATH_X.length - 1]);
+  return (
+    <Svg>
+      <line x1={px(PATH_X[0])} y1={140} x2={last} y2={140} stroke={I} strokeOpacity={0.4} />
+      {RECIPIENT_POS.map(([x, y], i) => (
+        <g key={i}>
+          <line x1={last} y1={140} x2={px(x)} y2={py(y)} stroke={V} strokeOpacity={0.7} />
+          <rect x={px(x) - 9} y={py(y) - 9} width={18} height={18} fill={V} />
+          <text x={px(x) - 14} y={py(y) + 4} fontSize={7} fill={I} style={mono} textAnchor="end">
+            {recipients[i].toUpperCase()}
+          </text>
+        </g>
+      ))}
+      {PATH_X.map((x, i) => (
+        <g key={x}>
+          {i === STOP_STAGE ? <rect x={px(x) - 3} y={118} width={6} height={44} fill={V} /> : <circle cx={px(x)} cy={140} r={9} fill={V} />}
+          <text x={px(x)} y={i % 2 ? 108 : 182} fontSize={7} fill={D} style={mono} textAnchor="middle">
+            {stages[i].toUpperCase()}
+          </text>
+        </g>
+      ))}
+    </Svg>
+  );
+}
+
+export function CabinetSvg({ locked = false }: { locked?: boolean }) {
+  const { drawers, note } = portalVisual.cabinet;
+  return (
+    <Svg>
+      <rect x={130} y={40} width={140} height={DRAWERS * 40 + 10} fill="#141414" stroke={I} strokeOpacity={0.4} />
+      {drawers.map((d, i) => {
+        const out = locked ? 0 : r2(OPEN_AMOUNT[i] * 40);
+        const y = 45 + i * 40;
+        return (
+          <g key={d}>
+            {out > 0 && (
+              <>
+                {/* Top and right side of the pulled-out drawer */}
+                <path d={`M135,${y} L265,${y} L${r2(265 + out)},${r2(y - out / 3)} L${r2(135 + out)},${r2(y - out / 3)} Z`} fill="#3a3833" />
+                <path d={`M265,${y} L${r2(265 + out)},${r2(y - out / 3)} L${r2(265 + out)},${r2(y - out / 3 + 34)} L265,${y + 34} Z`} fill="#1f1e1c" />
+              </>
+            )}
+            <rect x={135 + out} y={r2(y - out / 3)} width={130} height={34} fill="#2a2926" />
+            <rect x={175 + out} y={r2(y - out / 3 + 20)} width={50} height={4} fill={I} />
+            <circle cx={250 + out} cy={r2(y - out / 3 + 10)} r={4} fill={locked ? V : "#3a3833"} />
+            <text x={120} y={y + 21} fontSize={7} fill={D} style={mono} textAnchor="end">
+              {d.toUpperCase()}
+            </text>
+          </g>
+        );
+      })}
+      <text x={200} y={280} fontSize={8} fill={locked ? V : D} style={mono} textAnchor="middle">
+        {(locked ? portalVisual.cabinet.locked : portalVisual.cabinet.open).toUpperCase()} · {note.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function RecordsSvg() {
+  const w = 44;
+  const x = (i: number) => r2(200 + (i - (RECORD_COUNT - 1) / 2) * 52 - w / 2);
+  return (
+    <Svg>
+      {Array.from({ length: RECORD_COUNT }, (_, i) => (
+        <g key={i}>
+          <rect x={x(i)} y={110} width={w} height={60} fill="#151515" stroke={V} />
+          <text x={x(i) + w / 2} y={128} fontSize={6} fill={D} style={mono} textAnchor="middle">
+            {portalVisual.records.label.toUpperCase()}
+          </text>
+          <text x={x(i) + w / 2} y={142} fontSize={9} fill={I} style={mono} textAnchor="middle">
+            #{RECORD_FIRST + i}
+          </text>
+          {[0, 1, 2].map((j) => (
+            <rect key={j} x={x(i) + 6} y={150 + j * 6} width={w - 12 - j * 6} height={2} fill={D} />
+          ))}
+        </g>
+      ))}
+      <path d={`M${x(RECORD_COUNT - 1) + w / 2 - 6},92 l12,0 l-6,10 Z`} fill={V} />
+      <text x={200} y={210} fontSize={8} fill={R} style={mono} textAnchor="middle">
+        {portalVisual.records.check.toUpperCase()}
+      </text>
+      <text x={200} y={270} fontSize={8} fill={D} style={mono} textAnchor="middle">
+        {portalVisual.records.note.toUpperCase()}
+      </text>
+    </Svg>
+  );
+}
+
+export function LetterSvg() {
+  const { recipients, redacted } = portalVisual.letter;
+  return (
+    <Svg>
+      <rect x={60} y={50} width={150} height={196} fill={I} fillOpacity={0.9} />
+      {Array.from({ length: LETTER_LINES }, (_, i) => {
+        const w = 112 - (i % 3) * 16;
+        const y = 72 + i * 20;
+        return REDACT[i] ? <rect key={i} x={78} y={y - 5} width={w} height={12} fill="#0a0a0a" /> : <rect key={i} x={78} y={y} width={w} height={3} fill="#8a857d" />;
+      })}
+      {LETTER_TARGETS.map(([, y], i) => {
+        const cy = r2(148 - y * 70);
+        return (
+          <g key={i}>
+            <line x1={214} y1={148} x2={268} y2={cy} stroke={V} strokeOpacity={0.5} strokeDasharray="3 4" />
+            <rect x={270} y={cy - 12} width={34} height={24} fill={I} />
+            <path d={`M270,${cy - 12} l17,12 l17,-12`} stroke={V} strokeWidth={2} />
+            <text x={312} y={cy + 3} fontSize={7} fill={I} style={mono}>
+              {recipients[i].toUpperCase()}
+            </text>
+          </g>
+        );
+      })}
+      <text x={135} y={268} fontSize={8} fill={D} style={mono} textAnchor="middle">
+        {redacted.toUpperCase()}
       </text>
     </Svg>
   );

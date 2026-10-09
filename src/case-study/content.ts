@@ -1,8 +1,8 @@
 // Every word on /case-study lives here. Facts come only from the assignment brief; anything the
 // brief did not supply is a visible "TODO:" string so it can't slip through as an invented fact.
 
-/** Accent scopes. c3a–c3c are the npm study's three parts: attack (red), response (amber), fix (green). c4 is the MongoDB study (ice). */
-export type CaseId = "c1" | "c2" | "c3a" | "c3b" | "c3c" | "c4";
+/** Accent scopes. c3a–c3c are the npm study's three parts: attack (red), response (amber), fix (green). c4 is the MongoDB study (ice), c5 the academic-portal disclosure (violet). */
+export type CaseId = "c1" | "c2" | "c3a" | "c3b" | "c3c" | "c4" | "c5";
 
 /** Reference ids — source tags on the page link to #ref-<id>. */
 export type RefId =

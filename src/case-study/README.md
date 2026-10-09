@@ -19,8 +19,12 @@ It also appears on the portfolio home page (`src/components/CaseStudies.tsx`, th
 
 ## Current studies
 
-Four scroll-driven "interactive news investigations" for a non-technical reader, each a page of its own:
+Five scroll-driven "interactive news investigations" for a non-technical reader, each a page of its own:
 
+- **`/case-study/academic-portal-disclosure`** — a first-person responsible-disclosure account: an academic portal that appeared
+  to expose student records, admin pages and plaintext passwords (2026). Organisation, URLs and personal data are withheld; no
+  published sources. Accent: violet (`c5`). Questions 01–10, plus "The line" (what was and wasn't done). Text lives in
+  `studies/academic-portal-disclosure.ts`.
 - **`/case-study/npm-supply-chain-attack`** — a poisoned npm package that spread across four client servers at a small Dhaka
   software agency (2026). The author's own incident, still under investigation. Three parts with their own accents: attack
   (signal red), response (amber), fix (green). Questions 01–18, plus Gap, Timeline, Evidence. Text lives in
@@ -72,9 +76,10 @@ src/app/case-study/
   wannacry-eternalblue/page.tsx   Scene order for the WannaCry study
   npm-supply-chain-attack/page.tsx  Scene order for the npm supply-chain study
   mongodb-ransomware-attack/page.tsx  Scene order for the MongoDB ransomware study
+  academic-portal-disclosure/page.tsx  Scene order for the responsible-disclosure study
 src/case-study/
   registry.ts         The list of studies shown as cards
-  studies/            One content file per newer study (npm-supply-chain-attack.ts, mongodb-ransomware-attack.ts)
+  studies/            One content file per newer study (npm-supply-chain-attack.ts, mongodb-ransomware-attack.ts, academic-portal-disclosure.ts)
   content.ts          Shared types, references, and every word on the Shwapno and WannaCry pages, typed (front, nav, closing, refs per study). Facts come only from the brief.
   case-study.css      Accents per case, word reveal, marquee, step fade, ransom window
   lib/scroll.tsx      Lenis ↔ GSAP ScrollTrigger, scrollToId, useReducedMotion, useCan3D

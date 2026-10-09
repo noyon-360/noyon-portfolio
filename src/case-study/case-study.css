@@ -42,6 +42,10 @@
   --acc: var(--color-ice);
 }
 
+[data-case="c5"] {
+  --acc: var(--color-violet);
+}
+
 /* Lenis drives scrolling here; native smooth-scroll on <html> would fight it. */
 html.lenis,
 html.lenis body {

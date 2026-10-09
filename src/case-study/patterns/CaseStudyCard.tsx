@@ -8,6 +8,7 @@ const ACCENT: Record<CaseStudyAccent, string> = {
   ivory: "var(--color-ivory)",
   green: "var(--color-green)",
   ice: "var(--color-ice)",
+  violet: "var(--color-violet)",
 };
 
 /** A cover drawn in code: one band per incident, a faint grid and the study's number. */
