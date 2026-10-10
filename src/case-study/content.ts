@@ -23,6 +23,7 @@ export type RefId =
   | "s2w"
   | "dexposelockbit"
   | "dexposeqilin"
+  | "bleepingqilin"
   | "arete"
   | "vt166"
   | "gridinsoft"
@@ -429,9 +430,10 @@ export const c1Claim = {
         ["Model", "Ransomware-as-a-service: the core group builds the tools, and affiliates carry out attacks for a share of the ransom."],
         ["Linked to", "Russian-speaking criminals, despite the Chinese name."],
         ["Tactic", "Double extortion: steal the data, then threaten to publish it."],
-        ["Scale", "Most active ransomware group in the world by victim count in 2025 and the first half of 2026."],
+        ["Scale", "Most active ransomware group in the world by victim count in 2025 and the first half of 2026; more than 2,350 known victims in 62 countries."],
+        ["Arrest", "An alleged core member, a Russian national, was detained in Osaka, Japan, in May 2026 and extradited to Germany, which arrested him in October 2026. The group kept going: more than 450 new victims listed since June."],
       ],
-      refs: ["cybelangel"],
+      refs: ["cybelangel", "bleepingqilin"],
     },
     {
       name: "LockBit 5.0",
@@ -975,6 +977,13 @@ export const references: { id: RefId; outlet: string; title: string; href: strin
     date: "18 March 2026",
   },
   {
+    id: "bleepingqilin",
+    outlet: "BleepingComputer",
+    title: "Germany arrests alleged core Qilin ransomware member after extradition",
+    href: "https://www.bleepingcomputer.com/news/security/germany-arrests-alleged-core-qilin-ransomware-member-after-extradition/",
+    date: "9 October 2026",
+  },
+  {
     id: "arete",
     outlet: "Arete",
     title: "LockBit 5.0: The RaaS That Refuses to Go Away",
@@ -1004,7 +1013,7 @@ export const references: { id: RefId; outlet: string; title: string; href: strin
 ];
 
 // Which references each study lists, in order.
-export const shwapnoRefs: RefId[] = ["tbs", "dailystar", "fe", "unb", "jago", "dhakatribune", "ann", "dexposelockbit", "dexposeqilin", "qilinlisting", "cybelangel", "arete", "s2w"];
+export const shwapnoRefs: RefId[] = ["tbs", "dailystar", "fe", "unb", "jago", "dhakatribune", "ann", "dexposelockbit", "dexposeqilin", "qilinlisting", "cybelangel", "bleepingqilin", "arete", "s2w"];
 export const wannacryRefs: RefId[] = ["nao", "ms", "malwaretech", "doj", "fbi"];
 
 // ── Navigation: rail and index overlay (one set per study) ──────────────────
