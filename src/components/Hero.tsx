@@ -59,6 +59,14 @@ export default function Hero() {
   return (
     <section id="top" className="relative">
       <div className="intro-wipe" aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element -- decorative splash shown for under a second */}
+        <img
+          src={profile.photo}
+          alt=""
+          width={72}
+          height={72}
+          className="h-18 w-18 rounded-full border-2 border-current object-cover"
+        />
         <span className="font-mono text-sm font-semibold tracking-[0.3em]">NN</span>
         <span className="intro-bar" />
       </div>
